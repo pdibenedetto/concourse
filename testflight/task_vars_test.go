@@ -147,13 +147,20 @@ image_resource:
   source: {mirror_self: true}
 
 run:
-  path: echo
-  args: [((vs:echo_text))]
+  path: sh
+  args:
+  - -c
+  - |
+    text="((vs:echo_text))"
+    echo ${text:0:9}
+    echo ${text:9:20}
 `
 			})
 			It("successfully runs pipeline job with external task", func() {
 				execS := fly("trigger-job", "-w", "-j", pipelineName+"/task-var-is-defined-but-task-also-needs-vars-from-var-sources")
-				Expect(execS).To(gbytes.Say("text-from-var-source"))
+				Expect(execS).To(gbytes.Say("((redacted))"), "((vs:echo_test)) should be redacted and not leak")
+				Expect(execS).To(gbytes.Say("text-from"))
+				Expect(execS).To(gbytes.Say("-var-source"))
 			})
 		})
 	})
