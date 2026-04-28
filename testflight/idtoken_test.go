@@ -37,7 +37,7 @@ var _ = Describe("A pipeline containing idtoken var sources", Ordered, func() {
 		outputText = watch.Buffer().Contents()
 	})
 
-	It("creates valid default idtoken", func() {
+	It("creates valid default idtoken", func(ctx SpecContext) {
 		D1 := extractIDtokenFromBuffer(outputText, "D1")
 		D2 := extractIDtokenFromBuffer(outputText, "D2")
 		token := D1 + D2
@@ -53,9 +53,9 @@ var _ = Describe("A pipeline containing idtoken var sources", Ordered, func() {
 		Expect(claims.Team).To(Equal(teamName))
 		Expect(claims.Pipeline).To(Equal(testPipelineName))
 		Expect(claims.Subject).To(Equal(teamName + "/" + testPipelineName))
-	})
+	}, DefaultSpecTimeout)
 
-	It("creates valid custom idtoken", func() {
+	It("creates valid custom idtoken", func(ctx SpecContext) {
 		C1 := extractIDtokenFromBuffer(outputText, "C1")
 		C2 := extractIDtokenFromBuffer(outputText, "C2")
 		token := C1 + C2
@@ -73,9 +73,9 @@ var _ = Describe("A pipeline containing idtoken var sources", Ordered, func() {
 
 		Expect(parsed.Headers[0].Algorithm).To(Equal("ES256"))
 		Expect(claims.Subject).To(Equal(teamName))
-	})
+	}, DefaultSpecTimeout)
 
-	It("publishes correct issuer in OpenID configuration", func() {
+	It("publishes correct issuer in OpenID configuration", func(ctx SpecContext) {
 		cfg, err := getOpenIDConfiguration(config.ATCURL)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -86,7 +86,7 @@ var _ = Describe("A pipeline containing idtoken var sources", Ordered, func() {
 		jwksURI, ok := cfg["jwks_uri"].(string)
 		Expect(ok).To(BeTrue())
 		Expect(jwksURI).To(Equal(issuer + "/.well-known/jwks.json"))
-	})
+	}, DefaultSpecTimeout)
 })
 
 func extractIDtokenFromBuffer(buffer []byte, identifier string) string {
