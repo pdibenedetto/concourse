@@ -38,7 +38,9 @@ var _ = Describe("A pipeline containing idtoken var sources", Ordered, func() {
 	})
 
 	It("creates valid default idtoken", func() {
-		token := extractIDtokenFromBuffer(outputText, "default-token")
+		D1 := extractIDtokenFromBuffer(outputText, "D1")
+		D2 := extractIDtokenFromBuffer(outputText, "D2")
+		token := D1 + D2
 		Expect(token).ToNot(BeEmpty())
 
 		parsed, err := jwt.ParseSigned(token, []jose.SignatureAlgorithm{idtoken.DefaultAlgorithm})
@@ -54,7 +56,9 @@ var _ = Describe("A pipeline containing idtoken var sources", Ordered, func() {
 	})
 
 	It("creates valid custom idtoken", func() {
-		token := extractIDtokenFromBuffer(outputText, "custom-token")
+		C1 := extractIDtokenFromBuffer(outputText, "C1")
+		C2 := extractIDtokenFromBuffer(outputText, "C2")
+		token := C1 + C2
 		Expect(token).ToNot(BeEmpty())
 
 		parsed, err := jwt.ParseSigned(token, []jose.SignatureAlgorithm{jose.ES256})
@@ -85,8 +89,8 @@ var _ = Describe("A pipeline containing idtoken var sources", Ordered, func() {
 	})
 })
 
-func extractIDtokenFromBuffer(buffer []byte, whichToken string) string {
-	tokenMatcher := regexp.MustCompile("(?m)" + whichToken + ": (.*)$")
+func extractIDtokenFromBuffer(buffer []byte, identifier string) string {
+	tokenMatcher := regexp.MustCompile("(?m)" + identifier + ": (.*)$")
 	tokenMatches := tokenMatcher.FindSubmatch(buffer)
 	if len(tokenMatches) != 2 {
 		return ""
