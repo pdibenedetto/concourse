@@ -27,9 +27,9 @@ var _ = Describe("Download Fly CLI", func() {
 		config.FlyBin = beforeFly
 	})
 
-	It("can download fly CLI without issue", func() {
+	It("can download fly CLI without issue", func(ctx SpecContext) {
 		watch := fly("sync", "--force")
 		Expect(watch).ToNot(gbytes.Say("warning: failed to parse Content-Length"))
 		Expect(watch).To(gbytes.Say("done"))
-	})
+	}, DefaultSpecTimeout)
 })
