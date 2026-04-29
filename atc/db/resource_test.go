@@ -164,7 +164,7 @@ var _ = Describe("Resource", func() {
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					resourceConfigScope, err := resourceConfig.FindOrCreateScope(intptr(resource.ID()))
+					resourceConfigScope, err := resourceConfig.FindOrCreateScope(new(resource.ID()))
 					Expect(err).NotTo(HaveOccurred())
 
 					err = resource.SetResourceConfigScope(resourceConfigScope)
@@ -437,7 +437,7 @@ var _ = Describe("Resource", func() {
 			resourceConfig, err := resourceConfigFactory.FindOrCreateResourceConfig(resource.Type(), resource.Source(), nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			scope, err = resourceConfig.FindOrCreateScope(intptr(resource.ID()))
+			scope, err = resourceConfig.FindOrCreateScope(new(resource.ID()))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -1001,59 +1001,59 @@ var _ = Describe("Resource", func() {
 					Expect(historyPage[0].Version).To(Equal(resourceVersions[9].Version))
 					Expect(historyPage[1].Version).To(Equal(resourceVersions[8].Version))
 					Expect(pagination.Newer).To(BeNil())
-					Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(resourceVersions[7].ID), Limit: 2}))
+					Expect(pagination.Older).To(Equal(&db.Page{To: new(resourceVersions[7].ID), Limit: 2}))
 				})
 			})
 
 			Context("with a to that places it in the middle of the versions", func() {
 				It("returns the versions, with previous/next pages", func() {
-					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{To: db.NewIntPtr(resourceVersions[6].ID), Limit: 2}, nil)
+					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{To: new(resourceVersions[6].ID), Limit: 2}, nil)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(found).To(BeTrue())
 					Expect(len(historyPage)).To(Equal(2))
 					Expect(historyPage[0].Version).To(Equal(resourceVersions[6].Version))
 					Expect(historyPage[1].Version).To(Equal(resourceVersions[5].Version))
-					Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(resourceVersions[7].ID), Limit: 2}))
-					Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(resourceVersions[4].ID), Limit: 2}))
+					Expect(pagination.Newer).To(Equal(&db.Page{From: new(resourceVersions[7].ID), Limit: 2}))
+					Expect(pagination.Older).To(Equal(&db.Page{To: new(resourceVersions[4].ID), Limit: 2}))
 				})
 			})
 
 			Context("with a to that places it to the oldest version", func() {
 				It("returns the versions, with no next page", func() {
-					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{To: db.NewIntPtr(resourceVersions[1].ID), Limit: 2}, nil)
+					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{To: new(resourceVersions[1].ID), Limit: 2}, nil)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(found).To(BeTrue())
 					Expect(len(historyPage)).To(Equal(2))
 					Expect(historyPage[0].Version).To(Equal(resourceVersions[1].Version))
 					Expect(historyPage[1].Version).To(Equal(resourceVersions[0].Version))
-					Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(resourceVersions[2].ID), Limit: 2}))
+					Expect(pagination.Newer).To(Equal(&db.Page{From: new(resourceVersions[2].ID), Limit: 2}))
 					Expect(pagination.Older).To(BeNil())
 				})
 			})
 
 			Context("with a from that places it in the middle of the versions", func() {
 				It("returns the versions, with previous/next pages", func() {
-					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{From: db.NewIntPtr(resourceVersions[6].ID), Limit: 2}, nil)
+					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{From: new(resourceVersions[6].ID), Limit: 2}, nil)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(found).To(BeTrue())
 					Expect(len(historyPage)).To(Equal(2))
 					Expect(historyPage[0].Version).To(Equal(resourceVersions[7].Version))
 					Expect(historyPage[1].Version).To(Equal(resourceVersions[6].Version))
-					Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(resourceVersions[8].ID), Limit: 2}))
-					Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(resourceVersions[5].ID), Limit: 2}))
+					Expect(pagination.Newer).To(Equal(&db.Page{From: new(resourceVersions[8].ID), Limit: 2}))
+					Expect(pagination.Older).To(Equal(&db.Page{To: new(resourceVersions[5].ID), Limit: 2}))
 				})
 			})
 
 			Context("with a from that places it at the beginning of the most recent versions", func() {
 				It("returns the versions, with no previous page", func() {
-					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{From: db.NewIntPtr(resourceVersions[8].ID), Limit: 2}, nil)
+					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{From: new(resourceVersions[8].ID), Limit: 2}, nil)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(found).To(BeTrue())
 					Expect(len(historyPage)).To(Equal(2))
 					Expect(historyPage[0].Version).To(Equal(resourceVersions[9].Version))
 					Expect(historyPage[1].Version).To(Equal(resourceVersions[8].Version))
 					Expect(pagination.Newer).To(BeNil())
-					Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(resourceVersions[7].ID), Limit: 2}))
+					Expect(pagination.Older).To(Equal(&db.Page{To: new(resourceVersions[7].ID), Limit: 2}))
 				})
 			})
 
@@ -1201,27 +1201,27 @@ var _ = Describe("Resource", func() {
 
 			Context("with from", func() {
 				It("returns the versions, with previous/next pages including from", func() {
-					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{From: db.NewIntPtr(resourceVersions[1].ID), Limit: 2}, nil)
+					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{From: new(resourceVersions[1].ID), Limit: 2}, nil)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(found).To(BeTrue())
 					Expect(historyPage).To(HaveLen(2))
 					Expect(historyPage[0].Version).To(Equal(resourceVersions[2].Version))
 					Expect(historyPage[1].Version).To(Equal(resourceVersions[1].Version))
-					Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(resourceVersions[3].ID), Limit: 2}))
-					Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(resourceVersions[0].ID), Limit: 2}))
+					Expect(pagination.Newer).To(Equal(&db.Page{From: new(resourceVersions[3].ID), Limit: 2}))
+					Expect(pagination.Older).To(Equal(&db.Page{To: new(resourceVersions[0].ID), Limit: 2}))
 				})
 			})
 
 			Context("with to", func() {
 				It("returns the builds, with previous/next pages including to", func() {
-					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{To: db.NewIntPtr(resourceVersions[2].ID), Limit: 2}, nil)
+					historyPage, pagination, found, err := scenario.Resource("some-resource").Versions(db.Page{To: new(resourceVersions[2].ID), Limit: 2}, nil)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(found).To(BeTrue())
 					Expect(historyPage).To(HaveLen(2))
 					Expect(historyPage[0].Version).To(Equal(resourceVersions[2].Version))
 					Expect(historyPage[1].Version).To(Equal(resourceVersions[1].Version))
-					Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(resourceVersions[3].ID), Limit: 2}))
-					Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(resourceVersions[0].ID), Limit: 2}))
+					Expect(pagination.Newer).To(Equal(&db.Page{From: new(resourceVersions[3].ID), Limit: 2}))
+					Expect(pagination.Older).To(Equal(&db.Page{To: new(resourceVersions[0].ID), Limit: 2}))
 				})
 			})
 		})
@@ -2124,7 +2124,7 @@ var _ = Describe("Resource", func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			resourceConfigScope, err = resourceConfig.FindOrCreateScope(intptr(resource.ID()))
+			resourceConfigScope, err = resourceConfig.FindOrCreateScope(new(resource.ID()))
 			Expect(err).NotTo(HaveOccurred())
 
 			err = resource.SetResourceConfigScope(resourceConfigScope)

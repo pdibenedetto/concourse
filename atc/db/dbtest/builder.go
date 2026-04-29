@@ -306,7 +306,7 @@ func (builder Builder) WithResourceVersions(resourceName string, checkInterval t
 			return fmt.Errorf("find or create resource config: %w", err)
 		}
 
-		scope, err := resourceConfig.FindOrCreateScope(intptr(resource.ID()))
+		scope, err := resourceConfig.FindOrCreateScope(new(resource.ID()))
 		if err != nil {
 			return fmt.Errorf("find or create scope: %w", err)
 		}
@@ -392,7 +392,7 @@ func (builder Builder) WithFailingResourceCheck(resourceName string, checkInterv
 			return fmt.Errorf("find or create resource config: %w", err)
 		}
 
-		scope, err := resourceConfig.FindOrCreateScope(intptr(resource.ID()))
+		scope, err := resourceConfig.FindOrCreateScope(new(resource.ID()))
 		if err != nil {
 			return fmt.Errorf("find or create scope: %w", err)
 		}
@@ -1112,8 +1112,4 @@ func (builder Builder) createResourceCache(buildID int, resourceType db.Resource
 	}
 
 	return builder.ResourceCacheFactory.FindOrCreateResourceCache(db.ForBuild(buildID), resourceType.Type(), atc.Version{"custom-type": "version"}, resourceType.Source(), resourceType.Params(), imageResourceCache)
-}
-
-func intptr(i int) *int {
-	return &i
 }

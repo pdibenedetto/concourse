@@ -1101,13 +1101,13 @@ func (s *IntegrationSuite) TestRequestTimeoutZero() {
 func (s *IntegrationSuite) TestPropertiesGetChunked() {
 	handle := uuid()
 
-	longString := ""
+	var longString strings.Builder
 	for i := range 10000 {
-		longString += strconv.Itoa(i)
+		longString.WriteString(strconv.Itoa(i))
 	}
 
 	properties := garden.Properties{
-		"long1": longString,
+		"long1": longString.String(),
 		// Concourse may try to set an empty value property on a container.
 		// This just gets ignored (i.e. subsequent calls to
 		// container.Properties() won't include it)
@@ -1123,23 +1123,23 @@ func (s *IntegrationSuite) TestPropertiesGetChunked() {
 	s.NoError(err)
 
 	containers, err := s.gardenBackend.Containers(garden.Properties{
-		"long1": longString,
+		"long1": longString.String(),
 	})
 	s.NoError(err)
 
 	s.Len(containers, 1)
 
-	err = container.SetProperty("long2", longString)
+	err = container.SetProperty("long2", longString.String())
 	s.NoError(err)
 
 	containers, err = s.gardenBackend.Containers(garden.Properties{
-		"long1": longString,
-		"long2": longString,
+		"long1": longString.String(),
+		"long2": longString.String(),
 	})
 	s.NoError(err)
 	s.Len(containers, 1)
 
-	err = container.SetProperty(longString, "foo")
+	err = container.SetProperty(longString.String(), "foo")
 	s.Error(err)
 	s.Regexp("property.*too long", err.Error())
 
@@ -1147,8 +1147,8 @@ func (s *IntegrationSuite) TestPropertiesGetChunked() {
 	s.NoError(err)
 
 	s.Equal(garden.Properties{
-		"long1": longString,
-		"long2": longString,
+		"long1": longString.String(),
+		"long2": longString.String(),
 	}, properties)
 }
 

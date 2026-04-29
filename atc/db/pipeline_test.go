@@ -698,7 +698,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      resource.ID(),
 						Name:    resource.Name(),
-						ScopeID: intptr(resource.ResourceConfigScopeID()),
+						ScopeID: new(resource.ResourceConfigScopeID()),
 					},
 					{
 						ID:      otherResource.ID(),
@@ -708,7 +708,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      reallyOtherResource.ID(),
 						Name:    reallyOtherResource.Name(),
-						ScopeID: intptr(reallyOtherResource.ResourceConfigScopeID()),
+						ScopeID: new(reallyOtherResource.ResourceConfigScopeID()),
 					},
 				}))
 
@@ -756,7 +756,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      resource.ID(),
 						Name:    resource.Name(),
-						ScopeID: intptr(resource.ResourceConfigScopeID()),
+						ScopeID: new(resource.ResourceConfigScopeID()),
 					},
 					{
 						ID:      otherResource.ID(),
@@ -766,7 +766,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      reallyOtherResource.ID(),
 						Name:    reallyOtherResource.Name(),
-						ScopeID: intptr(reallyOtherResource.ResourceConfigScopeID()),
+						ScopeID: new(reallyOtherResource.ResourceConfigScopeID()),
 					},
 				}))
 				Expect(versions.Jobs).To(ConsistOf(jobs))
@@ -800,7 +800,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      resource.ID(),
 						Name:    resource.Name(),
-						ScopeID: intptr(resource.ResourceConfigScopeID()),
+						ScopeID: new(resource.ResourceConfigScopeID()),
 					},
 					{
 						ID:      otherResource.ID(),
@@ -810,7 +810,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      reallyOtherResource.ID(),
 						Name:    reallyOtherResource.Name(),
-						ScopeID: intptr(reallyOtherResource.ResourceConfigScopeID()),
+						ScopeID: new(reallyOtherResource.ResourceConfigScopeID()),
 					},
 				}))
 				Expect(versions.Jobs).To(ConsistOf(jobs))
@@ -851,7 +851,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      resource.ID(),
 						Name:    resource.Name(),
-						ScopeID: intptr(resource.ResourceConfigScopeID()),
+						ScopeID: new(resource.ResourceConfigScopeID()),
 					},
 					{
 						ID:      otherResource.ID(),
@@ -861,7 +861,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      reallyOtherResource.ID(),
 						Name:    reallyOtherResource.Name(),
-						ScopeID: intptr(reallyOtherResource.ResourceConfigScopeID()),
+						ScopeID: new(reallyOtherResource.ResourceConfigScopeID()),
 					},
 				}))
 				Expect(versions.Jobs).To(ConsistOf(jobs))
@@ -900,7 +900,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      resource.ID(),
 						Name:    resource.Name(),
-						ScopeID: intptr(resource.ResourceConfigScopeID()),
+						ScopeID: new(resource.ResourceConfigScopeID()),
 					},
 					{
 						ID:      otherResource.ID(),
@@ -910,7 +910,7 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      reallyOtherResource.ID(),
 						Name:    reallyOtherResource.Name(),
-						ScopeID: intptr(reallyOtherResource.ResourceConfigScopeID()),
+						ScopeID: new(reallyOtherResource.ResourceConfigScopeID()),
 					},
 				}))
 				Expect(versions.Jobs).To(ConsistOf(jobs))
@@ -969,17 +969,17 @@ var _ = Describe("Pipeline", func() {
 					{
 						ID:      resource.ID(),
 						Name:    resource.Name(),
-						ScopeID: intptr(resource.ResourceConfigScopeID()),
+						ScopeID: new(resource.ResourceConfigScopeID()),
 					},
 					{
 						ID:      otherResource.ID(),
 						Name:    otherResource.Name(),
-						ScopeID: intptr(otherResource.ResourceConfigScopeID()),
+						ScopeID: new(otherResource.ResourceConfigScopeID()),
 					},
 					{
 						ID:      reallyOtherResource.ID(),
 						Name:    reallyOtherResource.Name(),
-						ScopeID: intptr(reallyOtherResource.ResourceConfigScopeID()),
+						ScopeID: new(reallyOtherResource.ResourceConfigScopeID()),
 					},
 				}))
 				Expect(versions.Jobs).To(ConsistOf(jobs))
@@ -2081,7 +2081,7 @@ var _ = Describe("Pipeline", func() {
 			Context("only to", func() {
 				It("returns only those before and including to", func() {
 					returnedBuilds, _, err := pipeline.BuildsWithTime(db.Page{
-						To:    db.NewIntPtr(int(builds[2].StartTime().Unix())),
+						To:    new(int(builds[2].StartTime().Unix())),
 						Limit: 50,
 					})
 
@@ -2093,7 +2093,7 @@ var _ = Describe("Pipeline", func() {
 			Context("only from", func() {
 				It("returns only those after from", func() {
 					returnedBuilds, _, err := pipeline.BuildsWithTime(db.Page{
-						From:  db.NewIntPtr(int(builds[1].StartTime().Unix())),
+						From:  new(int(builds[1].StartTime().Unix())),
 						Limit: 50,
 					})
 
@@ -2105,8 +2105,8 @@ var _ = Describe("Pipeline", func() {
 			Context("from and to", func() {
 				It("returns only elements in the range", func() {
 					returnedBuilds, _, err := pipeline.BuildsWithTime(db.Page{
-						From:  db.NewIntPtr(int(builds[1].StartTime().Unix())),
-						To:    db.NewIntPtr(int(builds[2].StartTime().Unix())),
+						From:  new(int(builds[1].StartTime().Unix())),
+						To:    new(int(builds[2].StartTime().Unix())),
 						Limit: 50,
 					})
 					Expect(err).NotTo(HaveOccurred())
@@ -2370,7 +2370,3 @@ var _ = Describe("Pipeline", func() {
 		})
 	})
 })
-
-func intptr(i int) *int {
-	return &i
-}

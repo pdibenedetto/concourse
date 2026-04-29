@@ -488,47 +488,47 @@ var _ = Describe("Job", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(buildsPage).To(Equal([]db.BuildForAPI{builds[9], builds[8]}))
 				Expect(pagination.Newer).To(BeNil())
-				Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(builds[7].ID()), Limit: 2}))
+				Expect(pagination.Older).To(Equal(&db.Page{To: new(builds[7].ID()), Limit: 2}))
 			})
 		})
 
 		Context("with a to that places it in the middle of the builds", func() {
 			It("returns the builds, with previous/next pages", func() {
-				buildsPage, pagination, err := someJob.Builds(db.Page{To: db.NewIntPtr(builds[6].ID()), Limit: 2})
+				buildsPage, pagination, err := someJob.Builds(db.Page{To: new(builds[6].ID()), Limit: 2})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(buildsPage).To(Equal([]db.BuildForAPI{builds[6], builds[5]}))
-				Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(builds[7].ID()), Limit: 2}))
-				Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(builds[4].ID()), Limit: 2}))
+				Expect(pagination.Newer).To(Equal(&db.Page{From: new(builds[7].ID()), Limit: 2}))
+				Expect(pagination.Older).To(Equal(&db.Page{To: new(builds[4].ID()), Limit: 2}))
 			})
 		})
 
 		Context("with a to that places it at the end of the builds", func() {
 			It("returns the builds, with previous/next pages", func() {
-				buildsPage, pagination, err := someJob.Builds(db.Page{To: db.NewIntPtr(builds[1].ID()), Limit: 2})
+				buildsPage, pagination, err := someJob.Builds(db.Page{To: new(builds[1].ID()), Limit: 2})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(buildsPage).To(Equal([]db.BuildForAPI{builds[1], builds[0]}))
-				Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(builds[2].ID()), Limit: 2}))
+				Expect(pagination.Newer).To(Equal(&db.Page{From: new(builds[2].ID()), Limit: 2}))
 				Expect(pagination.Older).To(BeNil())
 			})
 		})
 
 		Context("with a from that places it in the middle of the builds", func() {
 			It("returns the builds, with previous/next pages", func() {
-				buildsPage, pagination, err := someJob.Builds(db.Page{From: db.NewIntPtr(builds[6].ID()), Limit: 2})
+				buildsPage, pagination, err := someJob.Builds(db.Page{From: new(builds[6].ID()), Limit: 2})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(buildsPage).To(Equal([]db.BuildForAPI{builds[7], builds[6]}))
-				Expect(pagination.Newer).To(Equal(&db.Page{From: db.NewIntPtr(builds[8].ID()), Limit: 2}))
-				Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(builds[5].ID()), Limit: 2}))
+				Expect(pagination.Newer).To(Equal(&db.Page{From: new(builds[8].ID()), Limit: 2}))
+				Expect(pagination.Older).To(Equal(&db.Page{To: new(builds[5].ID()), Limit: 2}))
 			})
 		})
 
 		Context("with a from that places it at the beginning of the builds", func() {
 			It("returns the builds, with previous/next pages", func() {
-				buildsPage, pagination, err := someJob.Builds(db.Page{From: db.NewIntPtr(builds[8].ID()), Limit: 2})
+				buildsPage, pagination, err := someJob.Builds(db.Page{From: new(builds[8].ID()), Limit: 2})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(buildsPage).To(Equal([]db.BuildForAPI{builds[9], builds[8]}))
 				Expect(pagination.Newer).To(BeNil())
-				Expect(pagination.Older).To(Equal(&db.Page{To: db.NewIntPtr(builds[7].ID()), Limit: 2}))
+				Expect(pagination.Older).To(Equal(&db.Page{To: new(builds[7].ID()), Limit: 2}))
 			})
 		})
 	})
@@ -603,7 +603,7 @@ var _ = Describe("Job", func() {
 			Context("only to", func() {
 				It("returns only those before to", func() {
 					returnedBuilds, _, err := job.BuildsWithTime(db.Page{
-						To:    db.NewIntPtr(int(builds[2].StartTime().Unix())),
+						To:    new(int(builds[2].StartTime().Unix())),
 						Limit: 50,
 					})
 
@@ -615,7 +615,7 @@ var _ = Describe("Job", func() {
 			Context("only from", func() {
 				It("returns only those after from", func() {
 					returnedBuilds, _, err := job.BuildsWithTime(db.Page{
-						From:  db.NewIntPtr(int(builds[1].StartTime().Unix())),
+						From:  new(int(builds[1].StartTime().Unix())),
 						Limit: 50,
 					})
 
@@ -627,8 +627,8 @@ var _ = Describe("Job", func() {
 			Context("from and to", func() {
 				It("returns only elements in the range", func() {
 					returnedBuilds, _, err := job.BuildsWithTime(db.Page{
-						From:  db.NewIntPtr(int(builds[1].StartTime().Unix())),
-						To:    db.NewIntPtr(int(builds[2].StartTime().Unix())),
+						From:  new(int(builds[1].StartTime().Unix())),
+						To:    new(int(builds[2].StartTime().Unix())),
 						Limit: 50,
 					})
 					Expect(err).NotTo(HaveOccurred())

@@ -335,7 +335,7 @@ var _ = Describe("ResourceType", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resourceType.SetResourceConfigScope(typeScope)).To(Succeed())
 
-				resourceScope, err := resourceConfig.FindOrCreateScope(intptr(resource.ID()))
+				resourceScope, err := resourceConfig.FindOrCreateScope(new(resource.ID()))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resource.SetResourceConfigScope(resourceScope)).To(Succeed())
 			})

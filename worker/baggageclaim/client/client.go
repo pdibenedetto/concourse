@@ -409,20 +409,20 @@ func (c *client) streamP2pOut(ctx context.Context, srcHandle string, encoding ba
 	}
 
 	// Write response body for p2p-streaming result
-	var result string
+	var result strings.Builder
 	buf := make([]byte, 1024)
 	for {
 		len, err := response.Body.Read(buf)
 		if len > 0 {
-			result += strings.TrimSpace(string(buf[:len]))
+			result.WriteString(strings.TrimSpace(string(buf[:len])))
 		}
 
 		if err == io.EOF {
-			if result == "ok" {
+			if result.String() == "ok" {
 				break
 			}
 
-			return errors.New(result)
+			return errors.New(result.String())
 		}
 
 		if err != nil {

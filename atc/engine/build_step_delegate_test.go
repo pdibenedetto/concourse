@@ -609,8 +609,7 @@ var _ = Describe("BuildStepDelegate", func() {
 				}
 
 				if rt.Kind() == reflect.Struct {
-					for i := 0; i < rt.NumField(); i++ {
-						field := rt.Field(i)
+					for field := range rt.Fields() {
 						walk(append(paths, field.Name), field.Type)
 					}
 				}
