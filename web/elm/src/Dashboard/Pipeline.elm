@@ -1,9 +1,12 @@
 module Dashboard.Pipeline exposing
     ( hdPipelineView
     , headerRows
+    , jobStatus
     , pipelineNotSetView
     , pipelineStatus
     , pipelineView
+    , sinceTransitionText
+    , visibilityView
     )
 
 import Application.Models exposing (Session)
@@ -31,7 +34,8 @@ import Html.Attributes
         , id
         , style
         )
-import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
+import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, on, preventDefaultOn, stopPropagationOn)
+import Dashboard.Group.Models exposing (Card(..))
 import Message.Effects as Effects
 import Message.Message exposing (DomID(..), Message(..), PipelinesSection(..))
 import Routes

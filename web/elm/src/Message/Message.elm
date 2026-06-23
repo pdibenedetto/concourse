@@ -50,6 +50,8 @@ type Message
     | Click DomID
     | GoToRoute Routes.Route
     | Scrolled StrictEvents.ScrollState
+    | ToggleHighDensity
+    | ToggleGroupListView
     | NoOp
 
 

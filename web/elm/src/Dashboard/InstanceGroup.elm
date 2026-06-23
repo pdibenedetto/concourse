@@ -1,9 +1,8 @@
-module Dashboard.InstanceGroup exposing (cardView, hdCardView)
+module Dashboard.InstanceGroup exposing (cardView, hdCardView, instanceGroupRoute)
 
 import Application.Models exposing (Session)
 import ColorValues
 import Concourse
-import Concourse.BuildStatus exposing (BuildStatus(..))
 import Dashboard.FilterBuilder exposing (instanceGroupFilter)
 import Dashboard.Group.Models exposing (Pipeline)
 import Dashboard.Pipeline exposing (pipelineStatus)
@@ -21,8 +20,10 @@ import Html.Attributes
         , href
         , style
         )
+
 import List.Extra
 import Message.Message exposing (DomID(..), Message(..), PipelinesSection(..))
+import Dashboard.Group.Models exposing (Card(..))
 import Routes
 import Tooltip
 import Views.FavoritedIcon

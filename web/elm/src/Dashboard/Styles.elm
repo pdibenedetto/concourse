@@ -4,11 +4,32 @@ module Dashboard.Styles exposing
     , cardTooltip
     , consoleIcon
     , content
+    , groupPageContent
     , docsIcon
     , dropdownContainer
     , dropdownItem
     , emptyCardBody
     , footerLink
+    , listViewInstanceGroupBar
+    , listViewRowOverlay
+    , listViewInstancedPipelineButtons
+    , listViewInstancedRowLink
+    , listViewPipelineButtonsContainer
+    , listViewPipelineInfo
+    , listViewPipelineRow
+    , listViewPipelineStatus
+    , listViewPipelineStatusColored
+    , listViewRowContainer
+    , listViewRowContent
+    , listViewRowLink
+    , listViewRowStatusBar
+    , listViewRowStatusBarTall
+    , listViewStepStatusBlock
+    , listViewStepStatusBlocks
+    , listViewTeamGroup
+    , listViewTeamHeader
+    , listViewTeamName
+    , listView
     , highDensityToggle
     , info
     , infoBar
@@ -118,6 +139,27 @@ content highDensity =
 
         else
             "row"
+    ]
+
+
+groupPageContent : Bool -> List (Html.Attribute msg)
+groupPageContent isListView =
+    [ style "align-content" "flex-start"
+    , style "display" "initial"
+    , style "flex-flow" "column wrap"
+    , style "padding" <|
+        if isListView then
+            "30px"
+
+        else
+            "30px 0"
+    , style "flex-grow" "1"
+    , style "overflow-y" "auto"
+    , style "height" "100%"
+    , style "width" "100%"
+    , style "box-sizing" "border-box"
+    , style "-webkit-overflow-scrolling" "touch"
+    , style "flex-direction" "row"
     ]
 
 
@@ -1018,4 +1060,190 @@ pipelineSectionHeader =
     [ style "font-size" "22px"
     , style "font-weight" Views.Styles.fontWeightBold
     , style "padding" <| String.fromInt GridConstants.padding ++ "px"
+    ]
+
+
+-- HD List View Styles
+listViewTeamGroup : List (Html.Attribute msg)
+listViewTeamGroup =
+    [ style "margin-bottom" "32px"
+    ]
+
+
+listViewTeamHeader : List (Html.Attribute msg)
+listViewTeamHeader =
+    [ style "display" "flex"
+    , style "align-items" "center"
+    , style "margin-bottom" "32px"
+    , style "background" "#363636"
+    , style "z-index" "2"
+    , style "opacity" "0.9"
+    , style "padding-left" "32px"
+    , style "width" "100%"
+    , style "line-height" "25px"
+    ]
+
+
+listViewTeamName : List (Html.Attribute msg)
+listViewTeamName =
+    [ style "font-size" "18px"
+    , style "font-weight" "900"
+    , style "padding-right" "0.5rem"
+    ]
+
+
+listView : List (Html.Attribute msg)
+listView =
+    [ style "width" "100%"
+    , style "box-sizing" "border-box"
+    ]
+
+
+listViewPipelineRow : List (Html.Attribute msg)
+listViewPipelineRow =
+    [ style "display" "flex"
+    , style "align-items" "center"
+    , style "padding" "12px 16px"
+    , style "background-color" "#262626"
+    , style "width" "100%"
+    , style "box-sizing" "border-box"
+    ]
+
+
+listViewPipelineInfo : List (Html.Attribute msg)
+listViewPipelineInfo =
+    [ style "flex-grow" "1"
+    , style "font-size" "14px"
+    , style "font-weight" "700"
+    ]
+
+
+listViewPipelineStatus : List (Html.Attribute msg)
+listViewPipelineStatus =
+    [ style "font-size" "12px"
+    , style "color" "#a0a0a0"
+    , style "text-transform" "uppercase"
+    , style "letter-spacing" "0.05em"
+    , style "margin-right" "15px"
+    ]
+
+
+listViewPipelineStatusColored : String -> List (Html.Attribute msg)
+listViewPipelineStatusColored color =
+    listViewPipelineStatus ++ [ style "color" color ]
+
+
+listViewRowContainer : Bool -> List (Html.Attribute msg)
+listViewRowContainer isBeingDragged =
+    [ style "display" "flex"
+    , style "min-width" "800px"
+    , style "width" "100%"
+    , style "position" "relative"
+    , style "height" (if isBeingDragged then "0" else "auto")
+    , style "overflow" (if isBeingDragged then "hidden" else "visible")
+    , style "cursor" (if isBeingDragged then "grabbing" else "grab")
+    ]
+
+
+listViewRowOverlay : Bool -> List (Html.Attribute msg)
+listViewRowOverlay isDragging =
+    [ style "position" "absolute"
+    , style "top" "0"
+    , style "right" "0"
+    , style "bottom" "0"
+    , style "left" "0"
+    , style "z-index" "1"
+    , style "pointer-events" (if isDragging then "auto" else "none")
+    ]
+
+
+listViewRowLink : List (Html.Attribute msg)
+listViewRowLink =
+    [ style "text-decoration" "none"
+    , style "color" "inherit"
+    , style "display" "flex"
+    , style "width" "100%"
+    ]
+
+
+listViewInstancedRowLink : List (Html.Attribute msg)
+listViewInstancedRowLink =
+    [ style "text-decoration" "none"
+    , style "color" "inherit"
+    , style "display" "flex"
+    , style "flex-grow" "1"
+    ]
+
+
+listViewInstanceGroupBar : List (Html.Attribute msg)
+listViewInstanceGroupBar =
+    [ style "width" "12px"
+    , style "background-color" "#363636"
+    , style "flex-shrink" "0"
+    ]
+
+
+listViewRowStatusBar : String -> List (Html.Attribute msg)
+listViewRowStatusBar color =
+    [ style "width" "12px"
+    , style "background-color" color
+    , style "flex-shrink" "0"
+    ]
+
+
+listViewRowStatusBarTall : String -> List (Html.Attribute msg)
+listViewRowStatusBarTall color =
+    [ style "width" "12px"
+    , style "height" "100%"
+    , style "min-height" "64px"
+    , style "background-color" color
+    , style "flex-shrink" "0"
+    ]
+
+
+listViewRowContent : List (Html.Attribute msg)
+listViewRowContent =
+    [ style "flex-grow" "1"
+    , style "display" "flex"
+    , style "justify-content" "space-between"
+    , style "align-items" "center"
+    , style "width" "100%"
+    ]
+
+
+listViewInstancedPipelineButtons : List (Html.Attribute msg)
+listViewInstancedPipelineButtons =
+    [ style "display" "flex"
+    , style "align-items" "center"
+    , style "gap" "10px"
+    , style "background-color" "#262626"
+    , style "padding" "0 12px"
+    , style "cursor" "default"
+    ]
+
+
+listViewPipelineButtonsContainer : List (Html.Attribute msg)
+listViewPipelineButtonsContainer =
+    [ style "display" "flex"
+    , style "align-items" "center"
+    , style "gap" "34px"
+    ]
+
+
+listViewStepStatusBlocks : List (Html.Attribute msg)
+listViewStepStatusBlocks =
+    [ style "display" "flex"
+    , style "gap" "2px"
+    , style "height" "24px"
+    ]
+
+
+listViewStepStatusBlock : String -> List (Html.Attribute msg)
+listViewStepStatusBlock color =
+    [ style "width" "16px"
+    , style "min-width" "4px"
+    , style "height" "24px"
+    , style "background-color" color
+    , style "cursor" "pointer"
+    , style "position" "relative"
     ]
