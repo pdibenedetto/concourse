@@ -44,6 +44,13 @@ func makeWorker(state db.WorkerState) *dbfakes.FakeWorker {
 	return w
 }
 
+func makeNamedWorker(name string, state db.WorkerState) *dbfakes.FakeWorker {
+	w := new(dbfakes.FakeWorker)
+	w.NameReturns(name)
+	w.StateReturns(state)
+	return w
+}
+
 func makeComponent(name string, interval time.Duration, lastRan time.Time, paused bool) *dbfakes.FakeComponent {
 	c := new(dbfakes.FakeComponent)
 	c.NameReturns(name)
@@ -64,6 +71,13 @@ func dbReadOnlyStub(_ context.Context, _ string, _ ...any) sq.RowScanner {
 func dbDownStub(_ context.Context, _ string, _ ...any) sq.RowScanner {
 	return &fakeRowScanner{err: errors.New("connection refused")}
 }
+
+// workerStatus is a string alias matching WorkerHealth.Status — keeps test assertions readable.
+const (
+	workerStatusHealthy   = string(atc.HealthStatusHealthy)
+	workerStatusDegraded  = string(atc.HealthStatusDegraded)
+	workerStatusUnhealthy = string(atc.HealthStatusUnhealthy)
+)
 
 var _ = Describe("Health API", func() {
 	var response *http.Response
@@ -98,7 +112,7 @@ var _ = Describe("Health API", func() {
 				Expect(json.Unmarshal(body, &health)).To(Succeed())
 				Expect(health.Status).To(Equal(atc.HealthStatusOK))
 				Expect(health.Database.Status).To(Equal(atc.HealthStatusHealthy))
-				Expect(health.Workers.Status).To(Equal(atc.HealthStatusHealthy))
+				Expect(health.Workers.Status).To(Equal(workerStatusHealthy))
 				Expect(health.Workers.Total).To(Equal(2))
 				Expect(health.Workers.Running).To(Equal(2))
 			})
@@ -130,7 +144,7 @@ var _ = Describe("Health API", func() {
 				var health atc.Health
 				Expect(json.Unmarshal(body, &health)).To(Succeed())
 				Expect(health.Status).To(Equal(atc.HealthStatusOK))
-				Expect(health.Workers.Status).To(Equal(atc.HealthStatusHealthy))
+				Expect(health.Workers.Status).To(Equal(workerStatusHealthy))
 				Expect(health.Workers.Running).To(Equal(1))
 			})
 		})
@@ -142,9 +156,9 @@ var _ = Describe("Health API", func() {
 				fakeDbConn.QueryRowContextStub = dbHealthyStub
 				// 2 running workers, minWorkerCount=3 → below threshold → degraded
 				dbWorkerFactory.WorkersReturns([]db.Worker{
-					makeWorker(db.WorkerStateRunning),
-					makeWorker(db.WorkerStateRunning),
-					makeWorker(db.WorkerStateStalled),
+					makeNamedWorker("worker-01", db.WorkerStateRunning),
+					makeNamedWorker("worker-02", db.WorkerStateRunning),
+					makeNamedWorker("worker-03", db.WorkerStateStalled),
 				}, nil)
 				customServer = buildTestServer(3)
 			})
@@ -154,32 +168,33 @@ var _ = Describe("Health API", func() {
 			})
 
 			It("returns 200 (degraded is not failing)", func() {
-				response, err := client.Get(customServer.URL + "/api/v1/health")
+				resp, err := client.Get(customServer.URL + "/api/v1/health")
 				Expect(err).NotTo(HaveOccurred())
-				defer response.Body.Close()
-				Expect(response.StatusCode).To(Equal(http.StatusOK))
+				defer resp.Body.Close()
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			})
 
-			It("returns status degraded", func() {
-				response, err := client.Get(customServer.URL + "/api/v1/health")
+			It("returns status degraded with unhealthy workers listed", func() {
+				resp, err := client.Get(customServer.URL + "/api/v1/health")
 				Expect(err).NotTo(HaveOccurred())
-				defer response.Body.Close()
+				defer resp.Body.Close()
 
-				body, _ := io.ReadAll(response.Body)
+				body, _ := io.ReadAll(resp.Body)
 				var health atc.Health
 				Expect(json.Unmarshal(body, &health)).To(Succeed())
 				Expect(health.Status).To(Equal(atc.HealthStatusDegraded))
-				Expect(health.Workers.Status).To(Equal(atc.HealthStatusDegraded))
+				Expect(health.Workers.Status).To(Equal(workerStatusDegraded))
 				Expect(health.Workers.Running).To(Equal(2))
 				Expect(health.Workers.Total).To(Equal(3))
+				Expect(health.Workers.UnhealthyWorkers).To(ConsistOf("worker-03"))
 			})
 		})
 
-		Context("when running workers are below the minimum threshold but at least one exists", func() {
+		Context("when there are no running workers but some are registered", func() {
 			BeforeEach(func() {
 				fakeDbConn.QueryRowContextStub = dbHealthyStub
 				dbWorkerFactory.WorkersReturns([]db.Worker{
-					makeWorker(db.WorkerStateStalled),
+					makeNamedWorker("worker-01", db.WorkerStateStalled),
 				}, nil)
 			})
 
@@ -187,14 +202,15 @@ var _ = Describe("Health API", func() {
 				Expect(response.StatusCode).To(Equal(http.StatusServiceUnavailable))
 			})
 
-			It("reports workers as unhealthy (no running workers)", func() {
+			It("reports workers as unhealthy with the stalled worker listed", func() {
 				body, _ := io.ReadAll(response.Body)
 				var health atc.Health
 				Expect(json.Unmarshal(body, &health)).To(Succeed())
 				Expect(health.Status).To(Equal(atc.HealthStatusFailing))
-				Expect(health.Workers.Status).To(Equal(atc.HealthStatusUnhealthy))
+				Expect(health.Workers.Status).To(Equal(workerStatusUnhealthy))
 				Expect(health.Workers.Total).To(Equal(1))
 				Expect(health.Workers.Running).To(Equal(0))
+				Expect(health.Workers.UnhealthyWorkers).To(ConsistOf("worker-01"))
 			})
 		})
 
@@ -213,9 +229,10 @@ var _ = Describe("Health API", func() {
 				var health atc.Health
 				Expect(json.Unmarshal(body, &health)).To(Succeed())
 				Expect(health.Status).To(Equal(atc.HealthStatusFailing))
-				Expect(health.Workers.Status).To(Equal(atc.HealthStatusUnhealthy))
+				Expect(health.Workers.Status).To(Equal(workerStatusUnhealthy))
 				Expect(health.Workers.Total).To(Equal(0))
 				Expect(health.Workers.Running).To(Equal(0))
+				Expect(health.Workers.UnhealthyWorkers).To(BeEmpty())
 			})
 		})
 
@@ -278,7 +295,7 @@ var _ = Describe("Health API", func() {
 				var health atc.Health
 				Expect(json.Unmarshal(body, &health)).To(Succeed())
 				Expect(health.Status).To(Equal(atc.HealthStatusFailing))
-				Expect(health.Workers.Status).To(Equal(atc.HealthStatusUnhealthy))
+				Expect(health.Workers.Status).To(Equal(workerStatusUnhealthy))
 			})
 		})
 

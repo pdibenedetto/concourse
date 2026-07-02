@@ -10,6 +10,9 @@ import (
 	"github.com/concourse/concourse/atc/db"
 )
 
+// GetHealth returns the health of the Concourse cluster — database, workers, and components.
+// A 503 response indicates a cluster-level problem (e.g. database unreachable, no workers),
+// not a failure of the web node handling this request.
 func (s *Server) GetHealth(w http.ResponseWriter, r *http.Request) {
 	logger := s.logger.Session("get-health")
 
@@ -29,9 +32,9 @@ func (s *Server) GetHealth(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case dbHealth.Status == atc.HealthStatusUnhealthy:
 		health.Status = atc.HealthStatusFailing
-	case workerHealth.Status == atc.HealthStatusUnhealthy:
+	case workerHealth.Status == string(atc.HealthStatusUnhealthy):
 		health.Status = atc.HealthStatusFailing
-	case workerHealth.Status == atc.HealthStatusDegraded || runtimeDegraded:
+	case workerHealth.Status == string(atc.HealthStatusDegraded) || runtimeDegraded:
 		health.Status = atc.HealthStatusDegraded
 	default:
 		health.Status = atc.HealthStatusOK
@@ -44,6 +47,7 @@ func (s *Server) GetHealth(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewEncoder(w).Encode(health); err != nil {
 		logger.Error("failed-to-encode-health", err)
+		http.Error(w, "failed to encode health response", http.StatusInternalServerError)
 	}
 }
 
@@ -73,19 +77,27 @@ func (s *Server) checkDatabase(ctx context.Context) atc.DatabaseHealth {
 func (s *Server) checkWorkers() atc.WorkerHealth {
 	workers, err := s.workerFactory.Workers()
 	if err != nil {
-		return atc.WorkerHealth{Status: atc.HealthStatusUnhealthy}
+		return atc.WorkerHealth{Status: string(atc.HealthStatusUnhealthy)}
 	}
 
 	total := len(workers)
-	running := countWorkers(workers, db.WorkerStateRunning)
+	running := 0
+	var unhealthy []string
+	for _, w := range workers {
+		if w.State() == db.WorkerStateRunning {
+			running++
+		} else {
+			unhealthy = append(unhealthy, w.Name())
+		}
+	}
 
 	switch {
 	case total == 0 || running == 0:
-		return atc.WorkerHealth{Status: atc.HealthStatusUnhealthy, Total: total, Running: running}
+		return atc.WorkerHealth{Status: string(atc.HealthStatusUnhealthy), Total: total, Running: running, UnhealthyWorkers: unhealthy}
 	case running < s.minWorkerCount:
-		return atc.WorkerHealth{Status: atc.HealthStatusDegraded, Total: total, Running: running}
+		return atc.WorkerHealth{Status: string(atc.HealthStatusDegraded), Total: total, Running: running, UnhealthyWorkers: unhealthy}
 	default:
-		return atc.WorkerHealth{Status: atc.HealthStatusHealthy, Total: total, Running: running}
+		return atc.WorkerHealth{Status: string(atc.HealthStatusHealthy), Total: total, Running: running, UnhealthyWorkers: unhealthy}
 	}
 }
 
@@ -134,14 +146,4 @@ func isStale(c db.Component, multiplier float64) bool {
 	}
 	staleWindow := time.Duration(float64(c.Interval()) * multiplier)
 	return time.Since(c.LastRan()) > staleWindow
-}
-
-func countWorkers(workers []db.Worker, state db.WorkerState) int {
-	n := 0
-	for _, w := range workers {
-		if w.State() == state {
-			n++
-		}
-	}
-	return n
 }

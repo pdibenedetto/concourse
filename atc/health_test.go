@@ -17,7 +17,7 @@ var _ = Describe("Health", func() {
 				Status:    atc.HealthStatusOK,
 				Timestamp: timestamp,
 				Database:  atc.DatabaseHealth{Status: atc.HealthStatusHealthy},
-				Workers:   atc.WorkerHealth{Status: atc.HealthStatusHealthy, Total: 3, Running: 3},
+				Workers:   atc.WorkerHealth{Status: string(atc.HealthStatusHealthy), Total: 3, Running: 3},
 			}
 
 			jsonBytes, err := json.Marshal(health)
@@ -28,9 +28,41 @@ var _ = Describe("Health", func() {
 			Expect(unmarshaled.Status).To(Equal(atc.HealthStatusOK))
 			Expect(unmarshaled.Timestamp).To(Equal(timestamp))
 			Expect(unmarshaled.Database.Status).To(Equal(atc.HealthStatusHealthy))
-			Expect(unmarshaled.Workers.Status).To(Equal(atc.HealthStatusHealthy))
+			Expect(unmarshaled.Workers.Status).To(Equal(string(atc.HealthStatusHealthy)))
 			Expect(unmarshaled.Workers.Total).To(Equal(3))
 			Expect(unmarshaled.Workers.Running).To(Equal(3))
+		})
+
+		It("includes unhealthy_workers when workers are not running", func() {
+			health := atc.Health{
+				Status:    atc.HealthStatusFailing,
+				Timestamp: time.Now(),
+				Database:  atc.DatabaseHealth{Status: atc.HealthStatusHealthy},
+				Workers: atc.WorkerHealth{
+					Status:           string(atc.HealthStatusUnhealthy),
+					Total:            2,
+					Running:          0,
+					UnhealthyWorkers: []string{"worker-01", "worker-02"},
+				},
+			}
+
+			jsonBytes, err := json.Marshal(health)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(jsonBytes)).To(ContainSubstring(`"unhealthy_workers"`))
+			Expect(string(jsonBytes)).To(ContainSubstring("worker-01"))
+		})
+
+		It("omits unhealthy_workers when all workers are running", func() {
+			health := atc.Health{
+				Status:    atc.HealthStatusOK,
+				Timestamp: time.Now(),
+				Database:  atc.DatabaseHealth{Status: atc.HealthStatusHealthy},
+				Workers:   atc.WorkerHealth{Status: string(atc.HealthStatusHealthy), Total: 1, Running: 1},
+			}
+
+			jsonBytes, err := json.Marshal(health)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(jsonBytes)).NotTo(ContainSubstring(`"unhealthy_workers"`))
 		})
 
 		It("includes the error field when database is unhealthy", func() {
@@ -38,7 +70,7 @@ var _ = Describe("Health", func() {
 				Status:    atc.HealthStatusFailing,
 				Timestamp: time.Now(),
 				Database:  atc.DatabaseHealth{Status: atc.HealthStatusUnhealthy, Error: "connection refused"},
-				Workers:   atc.WorkerHealth{Status: atc.HealthStatusHealthy},
+				Workers:   atc.WorkerHealth{Status: string(atc.HealthStatusHealthy)},
 			}
 
 			jsonBytes, err := json.Marshal(health)
@@ -51,7 +83,7 @@ var _ = Describe("Health", func() {
 				Status:    atc.HealthStatusOK,
 				Timestamp: time.Now(),
 				Database:  atc.DatabaseHealth{Status: atc.HealthStatusHealthy},
-				Workers:   atc.WorkerHealth{Status: atc.HealthStatusHealthy, Total: 1, Running: 1},
+				Workers:   atc.WorkerHealth{Status: string(atc.HealthStatusHealthy), Total: 1, Running: 1},
 			}
 
 			jsonBytes, err := json.Marshal(health)
@@ -66,7 +98,7 @@ var _ = Describe("Health", func() {
 				Status:    atc.HealthStatusDegraded,
 				Timestamp: timestamp,
 				Database:  atc.DatabaseHealth{Status: atc.HealthStatusHealthy},
-				Workers:   atc.WorkerHealth{Status: atc.HealthStatusHealthy, Total: 1, Running: 1},
+				Workers:   atc.WorkerHealth{Status: string(atc.HealthStatusHealthy), Total: 1, Running: 1},
 				Components: []atc.ComponentHealth{
 					{Name: atc.ComponentScheduler, Status: atc.HealthStatusUnhealthy, Paused: false, LastRan: lastRan},
 					{Name: atc.ComponentCollectorVolumes, Status: atc.HealthStatusUnhealthy, Paused: false, LastRan: lastRan},
@@ -89,7 +121,7 @@ var _ = Describe("Health", func() {
 				Status:     atc.HealthStatusOK,
 				Timestamp:  time.Now(),
 				Database:   atc.DatabaseHealth{Status: atc.HealthStatusHealthy},
-				Workers:    atc.WorkerHealth{Status: atc.HealthStatusHealthy, Total: 1, Running: 1},
+				Workers:    atc.WorkerHealth{Status: string(atc.HealthStatusHealthy), Total: 1, Running: 1},
 				Components: []atc.ComponentHealth{},
 			}
 
@@ -100,15 +132,15 @@ var _ = Describe("Health", func() {
 	})
 
 	Describe("Health status constants", func() {
-		It("has correct overall status values", func() {
-			Expect(atc.HealthStatusOK).To(Equal("ok"))
-			Expect(atc.HealthStatusDegraded).To(Equal("degraded"))
-			Expect(atc.HealthStatusFailing).To(Equal("failing"))
+		It("serialises overall status values correctly", func() {
+			Expect(string(atc.HealthStatusOK)).To(Equal("ok"))
+			Expect(string(atc.HealthStatusDegraded)).To(Equal("degraded"))
+			Expect(string(atc.HealthStatusFailing)).To(Equal("failing"))
 		})
 
-		It("has correct subsystem status values", func() {
-			Expect(atc.HealthStatusHealthy).To(Equal("healthy"))
-			Expect(atc.HealthStatusUnhealthy).To(Equal("unhealthy"))
+		It("serialises subsystem status values correctly", func() {
+			Expect(string(atc.HealthStatusHealthy)).To(Equal("healthy"))
+			Expect(string(atc.HealthStatusUnhealthy)).To(Equal("unhealthy"))
 		})
 	})
 })

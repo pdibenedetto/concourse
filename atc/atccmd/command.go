@@ -205,7 +205,7 @@ type RunCommand struct {
 	} `group:"Web Server"`
 
 	Health struct {
-		MinWorkerCount         int     `long:"health-min-worker-count" default:"1" description:"Minimum number of running workers for the health endpoint to report healthy. Below this threshold the status is degraded (still 200). Zero workers is always failing."`
+		MinWorkerCount           int     `long:"health-min-worker-count" default:"1" description:"Minimum number of running workers before the health endpoint reports degraded. Setting this to 0 means the endpoint will only report healthy or failing — never degraded."`
 		ComponentStaleMultiplier float64 `long:"health-component-stale-multiplier" default:"2.0" description:"A component is considered stale when it has not run for more than this multiplier times its interval. Stale runtime components (scheduler, tracker, scanner) cause degraded status."`
 	} `group:"Health Endpoint"`
 
