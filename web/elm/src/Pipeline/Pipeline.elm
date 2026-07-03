@@ -450,7 +450,7 @@ view session model =
         ]
         [ Html.div
             (id "page-including-top-bar" :: Views.Styles.pageIncludingTopBar)
-            [ Html.div
+            [ Views.Styles.hideIf session.hideUI (Html.div
                 (id "top-bar-app" :: Views.Styles.topBar displayPaused)
                 [ Html.div
                     [ style "display" "flex"
@@ -520,10 +520,11 @@ view session model =
                     , Login.view session.userState model
                     ]
                 ]
+              )
             , Html.div
-                (id "page-below-top-bar" :: Views.Styles.pageBelowTopBar route)
+                (id "page-below-top-bar" :: Views.Styles.pageBelowTopBar session.hideUI route)
               <|
-                [ SideBar.view session (Just model.pipelineLocator)
+                [ Views.Styles.hideIf session.hideUI (SideBar.view session (Just model.pipelineLocator))
                 , viewSubPage session model
                 ]
             ]
@@ -653,7 +654,7 @@ backgroundImage pipeline =
 
 
 viewSubPage :
-    { a | hovered : HoverState.HoverState, version : String, screenSize : ScreenSize }
+    { a | hovered : HoverState.HoverState, version : String, screenSize : ScreenSize, hideUI : Bool }
     -> Model
     -> Html Message
 viewSubPage session model =
@@ -686,7 +687,7 @@ viewSubPage session model =
                     , Html.p [ class "explanation" ] []
                     ]
                 ]
-            , if model.hideLegend then
+            , if model.hideLegend || session.hideUI then
                 Html.text ""
 
               else
@@ -716,7 +717,7 @@ viewSubPage session model =
                     , Html.dt [ class "solid" ] [ Html.text "-" ]
                     , Html.dd [] [ Html.text "dependency (trigger)" ]
                     ]
-            , Html.table [ class "lower-right-info" ]
+            , Views.Styles.hideIf session.hideUI (Html.table [ class "lower-right-info" ]
                 [ Html.tr []
                     [ Html.td [ class "label" ]
                         [ Html.a
@@ -756,6 +757,7 @@ viewSubPage session model =
                         ]
                     ]
                 ]
+              )
             ]
         ]
 
