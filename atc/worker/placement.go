@@ -339,7 +339,12 @@ func (strategy limitActiveTasksStrategy) Approve(logger lager.Logger, worker db.
 		return nil
 	}
 
-	_, err := worker.IncreaseActiveTasks(strategy.MaxTasks)
+	maxTasks := strategy.MaxTasks
+	if workersMax := worker.MaxActiveTasks(); workersMax > 0 {
+		maxTasks = workersMax
+	}
+
+	_, err := worker.IncreaseActiveTasks(maxTasks)
 
 	return err
 }

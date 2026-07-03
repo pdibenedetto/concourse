@@ -611,6 +611,40 @@ var _ = Describe("Container Placement Strategies", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
+
+		Test("allows workers to define their own max active tasks", func() {
+			var scenario *workertest.Scenario
+
+			By("specifying the worker has a max active tasks of 10", func() {
+				scenario = Setup(
+					workertest.WithBasicJob(),
+					workertest.WithWorkers(
+						grt.NewWorker("worker1").
+							WithMaxActiveTasks(10).
+							WithActiveTasks(10),
+					),
+				)
+			})
+
+			var strategy worker.PlacementStrategy
+			By("specifying the system default max-tasks-per-worker as higher than 10", func() {
+				strategy = limitActiveTasksStrategy(20)
+			})
+
+			spec := runtime.ContainerSpec{
+				TeamID:   scenario.TeamID,
+				JobID:    scenario.JobID,
+				StepName: scenario.StepName,
+
+				Type: db.ContainerTypeTask,
+			}
+
+			workers, err := strategy.Order(logger, scenario.Pool, scenario.DB.Workers, spec)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = strategy.Approve(logger, workers[0], spec)
+			Expect(err).To(MatchError(db.ErrTooManyActiveTasks))
+		})
 	})
 
 	Describe("Limit Active Containers", func() {
