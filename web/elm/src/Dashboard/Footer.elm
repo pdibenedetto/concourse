@@ -174,7 +174,7 @@ legend session model =
                     , PipelineStatusSucceeded PipelineStatus.Running
                     ]
                 ++ legendSeparator session.screenSize
-   ++ toggleView model
+                ++ toggleView model
 
 
 concourseInfo :

@@ -1189,16 +1189,17 @@ showArchivedToggleView model =
     else
         Toggle.toggleSwitch
             { ariaLabel = "Toggle whether archived pipelines are displayed"
-            , hrefRoute = Just <|
-                Routes.Dashboard
-                    { searchType = Routes.Normal model.query
-                    , dashboardView =
-                        if on then
-                            Routes.ViewNonArchivedPipelines
+            , hrefRoute =
+                Just <|
+                    Routes.Dashboard
+                        { searchType = Routes.Normal model.query
+                        , dashboardView =
+                            if on then
+                                Routes.ViewNonArchivedPipelines
 
-                        else
-                            Routes.ViewAllPipelines
-                    }
+                            else
+                                Routes.ViewAllPipelines
+                        }
             , onToggle = NoOp
             , text = "show archived"
             , textDirection = Toggle.Left
@@ -1350,7 +1351,8 @@ turbulenceView path =
 dashboardCardsView : Session -> Model -> List (Html Message)
 dashboardCardsView session model =
     let
-        isViewingInstanceGroups = Filter.isViewingInstanceGroups model.query
+        isViewingInstanceGroups =
+            Filter.isViewingInstanceGroups model.query
     in
     if isViewingInstanceGroups then
         instanceGroupCardsView session model

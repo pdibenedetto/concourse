@@ -17,7 +17,7 @@ import Concourse.BuildStatus exposing (BuildStatus(..))
 import Concourse.PipelineStatus as PipelineStatus
 import Dashboard.DashboardPreview as DashboardPreview
 import Dashboard.Grid.Constants as GridConstants
-import Dashboard.Group.Models exposing (Pipeline)
+import Dashboard.Group.Models exposing (Card(..), Pipeline)
 import Dashboard.Styles as Styles
 import Dict
 import Duration
@@ -34,8 +34,7 @@ import Html.Attributes
         , id
         , style
         )
-import Html.Events exposing (onClick, onMouseEnter, onMouseLeave, on, preventDefaultOn, stopPropagationOn)
-import Dashboard.Group.Models exposing (Card(..))
+import Html.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Message.Effects as Effects
 import Message.Message exposing (DomID(..), Message(..), PipelinesSection(..))
 import Routes

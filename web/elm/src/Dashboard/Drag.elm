@@ -24,29 +24,28 @@ dragCardIndices card target cards =
         fromIndex =
             cardIndex card
     in
-    case fromIndex of
-        Nothing ->
-            Nothing
+    fromIndex
+        |> Maybe.andThen
+            (\from ->
+                let
+                    toIndex =
+                        case target of
+                            Before id ->
+                                cardIndex id
+                                    |> Maybe.map
+                                        (\targetIdx ->
+                                            if from < targetIdx then
+                                                targetIdx
 
-        Just from ->
-            let
-                toIndex =
-                    case target of
-                        Before id ->
-                            cardIndex id
-                                |> Maybe.map
-                                    (\targetIdx ->
-                                        if from < targetIdx then
-                                            targetIdx
+                                            else
+                                                targetIdx + 1
+                                        )
 
-                                        else
-                                            targetIdx + 1
-                                    )
-
-                        End ->
-                            Just (List.length cards)
-            in
-            toIndex |> Maybe.map (Tuple.pair from)
+                            End ->
+                                Just (List.length cards)
+                in
+                toIndex |> Maybe.map (Tuple.pair from)
+            )
 
 
 reverseIndices : Int -> ( Int, Int ) -> ( Int, Int )

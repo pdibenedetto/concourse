@@ -1436,10 +1436,10 @@ all =
                         \_ ->
                             hdToggle
                                 |> Query.has [ style "flex-direction" "row" ]
-                    , test "links to HD view" <|
+                    , test "is a clickable button" <|
                         \_ ->
                             hdToggle
-                                |> Query.has [ attribute <| Attr.href "/hd" ]
+                                |> Query.has [ style "cursor" "pointer" ]
                     , test "displays the off state" <|
                         \_ ->
                             hdToggle
@@ -1485,7 +1485,7 @@ all =
                                     , style "height" "20px"
                                     , style "width" "35px"
                                     ]
-                    , test "links to normal dashboard view" <|
+                    , test "is a clickable button" <|
                         \_ ->
                             whenOnDashboard { highDensity = True }
                                 |> givenDataUnauthenticated
@@ -1499,7 +1499,7 @@ all =
                                 |> Tuple.first
                                 |> Common.queryView
                                 |> findHDToggle
-                                |> Query.has [ attribute <| Attr.href "/" ]
+                                |> Query.has [ style "cursor" "pointer" ]
                     , test "will not shrink on resizing" <|
                         \_ ->
                             whenOnDashboard { highDensity = True }
@@ -1888,13 +1888,15 @@ all =
                         (Callback.LoggedOut <| Ok ())
                     |> Tuple.second
                     |> Common.contains (Effects.NavigateTo "/")
-        , test "navigate to hd view on logged out when in hd view" <|
+        , test "navigate to root on logged out when in hd view" <|
             \_ ->
-                Common.init "/hd"
+                Common.init "/"
+                    |> Application.handleDelivery (HighDensityReceived (Ok True))
+                    |> Tuple.first
                     |> Application.handleCallback
                         (Callback.LoggedOut <| Ok ())
                     |> Tuple.second
-                    |> Common.contains (Effects.NavigateTo "/hd")
+                    |> Common.contains (Effects.NavigateTo "/")
         , test "fetch all teams on logged out" <|
             \_ ->
                 Common.init "/"
@@ -1951,13 +1953,13 @@ iconSelector { size, image } =
 
 whenOnDashboard : { highDensity : Bool } -> Application.Model
 whenOnDashboard { highDensity } =
-    Common.init
-        (if highDensity then
-            "/hd"
+    Common.init "/"
+        |> (if highDensity then
+                Application.handleDelivery (HighDensityReceived (Ok True)) >> Tuple.first
 
-         else
-            "/"
-        )
+            else
+                identity
+           )
         |> Common.withAllPipelinesVisible
 
 
@@ -1967,12 +1969,7 @@ whenOnDashboardViewingAllPipelines { highDensity } =
         |> Application.handleDelivery
             (RouteChanged <|
                 Routes.Dashboard
-                    { searchType =
-                        if highDensity then
-                            Routes.HighDensity
-
-                        else
-                            Routes.Normal ""
+                    { searchType = Routes.Normal ""
                     , dashboardView = Routes.ViewAllPipelines
                     }
             )
@@ -2133,7 +2130,7 @@ circularJobs =
       , pausedBy = Nothing
       , pausedAt = Nothing
       , disableManualTrigger = False
-    , disableReruns = False
+      , disableReruns = False
       , inputs =
             [ { name = "inA"
               , resource = "res0"
@@ -2184,7 +2181,7 @@ circularJobs =
       , pausedBy = Nothing
       , pausedAt = Nothing
       , disableManualTrigger = False
-    , disableReruns = False
+      , disableReruns = False
       , inputs =
             [ { name = "inB"
               , resource = "res0"

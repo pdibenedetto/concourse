@@ -64,7 +64,7 @@ toggleSwitch { ariaLabel, hrefRoute, onToggle, text, textDirection, styles, on }
                     ++ styles
                 )
                 [ iconElem, textElem ]
-        
+
         Nothing ->
             Html.div
                 ([ style "cursor" "pointer"

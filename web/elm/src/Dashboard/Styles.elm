@@ -4,32 +4,12 @@ module Dashboard.Styles exposing
     , cardTooltip
     , consoleIcon
     , content
-    , groupPageContent
     , docsIcon
     , dropdownContainer
     , dropdownItem
     , emptyCardBody
     , footerLink
-    , listViewInstanceGroupBar
-    , listViewRowOverlay
-    , listViewInstancedPipelineButtons
-    , listViewInstancedRowLink
-    , listViewPipelineButtonsContainer
-    , listViewPipelineInfo
-    , listViewPipelineRow
-    , listViewPipelineStatus
-    , listViewPipelineStatusColored
-    , listViewRowContainer
-    , listViewRowContent
-    , listViewRowLink
-    , listViewRowStatusBar
-    , listViewRowStatusBarTall
-    , listViewStepStatusBlock
-    , listViewStepStatusBlocks
-    , listViewTeamGroup
-    , listViewTeamHeader
-    , listViewTeamName
-    , listView
+    , groupPageContent
     , highDensityToggle
     , info
     , infoBar
@@ -53,6 +33,26 @@ module Dashboard.Styles exposing
     , legend
     , legendItem
     , legendSeparator
+    , listView
+    , listViewInstanceGroupBar
+    , listViewInstancedPipelineButtons
+    , listViewInstancedRowLink
+    , listViewPipelineButtonsContainer
+    , listViewPipelineInfo
+    , listViewPipelineRow
+    , listViewPipelineStatus
+    , listViewPipelineStatusColored
+    , listViewRowContainer
+    , listViewRowContent
+    , listViewRowLink
+    , listViewRowOverlay
+    , listViewRowStatusBar
+    , listViewRowStatusBarTall
+    , listViewStepStatusBlock
+    , listViewStepStatusBlocks
+    , listViewTeamGroup
+    , listViewTeamHeader
+    , listViewTeamName
     , loadingView
     , noInstanceVars
     , noPipelineCard
@@ -1063,7 +1063,10 @@ pipelineSectionHeader =
     ]
 
 
+
 -- HD List View Styles
+
+
 listViewTeamGroup : List (Html.Attribute msg)
 listViewTeamGroup =
     [ style "margin-bottom" "32px"
@@ -1139,9 +1142,27 @@ listViewRowContainer isBeingDragged =
     , style "min-width" "800px"
     , style "width" "100%"
     , style "position" "relative"
-    , style "height" (if isBeingDragged then "0" else "auto")
-    , style "overflow" (if isBeingDragged then "hidden" else "visible")
-    , style "cursor" (if isBeingDragged then "grabbing" else "grab")
+    , style "height"
+        (if isBeingDragged then
+            "0"
+
+         else
+            "auto"
+        )
+    , style "overflow"
+        (if isBeingDragged then
+            "hidden"
+
+         else
+            "visible"
+        )
+    , style "cursor"
+        (if isBeingDragged then
+            "grabbing"
+
+         else
+            "grab"
+        )
     ]
 
 
@@ -1153,7 +1174,13 @@ listViewRowOverlay isDragging =
     , style "bottom" "0"
     , style "left" "0"
     , style "z-index" "1"
-    , style "pointer-events" (if isDragging then "auto" else "none")
+    , style "pointer-events"
+        (if isDragging then
+            "auto"
+
+         else
+            "none"
+        )
     ]
 
 

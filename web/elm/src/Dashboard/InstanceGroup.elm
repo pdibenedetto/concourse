@@ -4,7 +4,7 @@ import Application.Models exposing (Session)
 import ColorValues
 import Concourse
 import Dashboard.FilterBuilder exposing (instanceGroupFilter)
-import Dashboard.Group.Models exposing (Pipeline)
+import Dashboard.Group.Models exposing (Card(..), Pipeline)
 import Dashboard.Pipeline exposing (pipelineStatus)
 import Dashboard.Styles as Styles
 import Dict exposing (Dict)
@@ -20,10 +20,8 @@ import Html.Attributes
         , href
         , style
         )
-
 import List.Extra
 import Message.Message exposing (DomID(..), Message(..), PipelinesSection(..))
-import Dashboard.Group.Models exposing (Card(..))
 import Routes
 import Tooltip
 import Views.FavoritedIcon
