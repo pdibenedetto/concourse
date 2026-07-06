@@ -17,10 +17,10 @@
     "babel-loader": "^10.0.0",
     "child-process-promise": "2.2.1",
     "clean-css-cli": "5.6.3",
-    "elm": "0.19.1-6",
+    "elm": "0.19.2-0",
     "elm-analyse": "0.16.5",
     "elm-format": "0.8.8",
-    "elm-test": "0.19.1-revision17",
+    "elm-test": "0.19.2-0",
     "less": "4.6.4",
     "less-plugin-autoprefix": "2.0.0",
     "puppeteer": "^24.37.3",
@@ -30,8 +30,7 @@
     "webpack-cli": "7.0.2"
   },
   "resolutions": {
-    "less/request": "^2.86.0",
-    "elm": "npm:@lydell/elm@0.19.1-14"
+    "less/request": "^2.86.0"
   },
   "scripts": {
     "format": "elm-format --elm-version=0.19 web/elm --yes",
