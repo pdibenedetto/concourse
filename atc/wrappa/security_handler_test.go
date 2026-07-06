@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/concourse/concourse/atc"
 	"github.com/concourse/concourse/atc/wrappa"
 
 	"github.com/concourse/concourse/atc/wrappa/wrappafakes"
@@ -45,7 +46,7 @@ var _ = Describe("SecurityHandler", func() {
 	Context("when AdditionalHTTPHeaders is set", func() {
 		BeforeEach(func() {
 			securityHandler = wrappa.SecurityHandler{
-				AdditionalHTTPHeaders: map[string]string{
+				AdditionalHTTPHeaders: atc.HTTPHeadersFlag{
 					"X-Custom-Header":         "some-custom-value",
 					"X-Another-Custom-Header": "another-custom-value",
 				},

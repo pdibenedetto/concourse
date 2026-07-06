@@ -1,12 +1,16 @@
 package wrappa
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/concourse/concourse/atc"
+)
 
 type SecurityHandler struct {
 	XFrameOptions           string
 	ContentSecurityPolicy   string
 	StrictTransportSecurity string
-	AdditionalHTTPHeaders   map[string]string
+	AdditionalHTTPHeaders   atc.HTTPHeadersFlag
 	Handler                 http.Handler
 }
 
