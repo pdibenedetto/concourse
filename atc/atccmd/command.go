@@ -168,6 +168,7 @@ type RunCommand struct {
 	ResourceTypeCheckingInterval        time.Duration `long:"resource-type-checking-interval" default:"1m" description:"Interval on which to check for new versions of resource types."`
 	ResourceWithWebhookCheckingInterval time.Duration `long:"resource-with-webhook-checking-interval" default:"1m" description:"Interval on which to check for new versions of resources that has webhook defined."`
 	MaxChecksPerSecond                  int           `long:"max-checks-per-second" description:"Maximum number of checks that can be started per second. If not specified, this will be calculated as (# of resources)/(resource checking interval). -1 value will remove this maximum limit of checks per second."`
+	DestroyArchivedPipelinesAfter       time.Duration `long:"destroy-archived-pipelines-after" default:"0s" description:"The duration in Go's time.Duration format, after which an archived pipeline will be automatically destroyed. A value of zero means archived pipelines are never destroyed."`
 	PausePipelinesAfter                 int           `long:"pause-pipelines-after" default:"0" description:"The number of days after which a pipeline will be automatically paused if none of its jobs have run in more than the given number of days. A value of zero disables this component."`
 	PipelinePauserInterval              time.Duration `long:"pipeline-pauser-interval" default:"24h" hidden:"true" description:"The frequency on which the Pipeline Pauser component will be run to check if any pipelines need to be paused."`
 
@@ -1402,7 +1403,7 @@ func (cmd *RunCommand) gcComponents(
 		atc.ComponentCollectorVolumes:           gc.NewVolumeCollector(dbVolumeRepository, cmd.GC.MissingGracePeriod),
 		atc.ComponentCollectorContainers:        gc.NewContainerCollector(dbContainerRepository, cmd.GC.MissingGracePeriod, cmd.GC.HijackGracePeriod),
 		atc.ComponentCollectorCheckSessions:     gc.NewResourceConfigCheckSessionCollector(resourceConfigCheckSessionLifecycle),
-		atc.ComponentCollectorPipelines:         gc.NewPipelineCollector(dbPipelineLifecycle),
+		atc.ComponentCollectorPipelines:         gc.NewPipelineCollector(dbPipelineLifecycle, cmd.DestroyArchivedPipelinesAfter),
 		atc.ComponentCollectorAccessTokens:      gc.NewAccessTokensCollector(dbAccessTokenLifecycle, jwt.DefaultLeeway),
 		atc.ComponentCollectorChecks:            gc.NewChecksCollector(dbCheckLifecycle),
 	}

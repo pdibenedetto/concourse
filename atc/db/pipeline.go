@@ -128,6 +128,8 @@ type Pipeline interface {
 	SetParentIDs(jobID, buildID int) error
 }
 
+var _ Pipeline = (*pipeline)(nil)
+
 type pipeline struct {
 	id            int
 	name          string
@@ -772,11 +774,26 @@ func (p *pipeline) Expose() error {
 }
 
 func (p *pipeline) Destroy() error {
+	tx, err := p.conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer Rollback(tx)
+	err = p.destroy(tx)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (p *pipeline) destroy(tx Tx) error {
 	_, err := psql.Delete("pipelines").
 		Where(sq.Eq{
 			"id": p.id,
 		}).
-		RunWith(p.conn).
+		RunWith(tx).
 		Exec()
 
 	return err
