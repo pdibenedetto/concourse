@@ -24,12 +24,11 @@ func (handler SecurityHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	if handler.StrictTransportSecurity != "" {
 		w.Header().Set("Strict-Transport-Security", handler.StrictTransportSecurity)
 	}
-	for name, value := range handler.AdditionalHTTPHeaders {
-		w.Header().Set(name, value)
-	}
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Download-Options", "noopen")
 	w.Header().Set("Cache-Control", "no-store, private")
-
+	for name, value := range handler.AdditionalHTTPHeaders {
+		w.Header().Set(name, value)
+	}
 	handler.Handler.ServeHTTP(w, r)
 }
