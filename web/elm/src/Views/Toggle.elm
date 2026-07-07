@@ -2,7 +2,7 @@ module Views.Toggle exposing (TextDirection(..), toggleSwitch)
 
 import Assets
 import Html exposing (Html)
-import Html.Attributes exposing (attribute, href, style)
+import Html.Attributes exposing (attribute, href, style, type_)
 import Html.Events exposing (onClick)
 import Message.Message exposing (DomID(..), Message(..))
 import Routes
@@ -66,9 +66,18 @@ toggleSwitch { ariaLabel, hrefRoute, onToggle, text, textDirection, styles, on }
                 [ iconElem, textElem ]
 
         Nothing ->
-            Html.div
-                ([ style "cursor" "pointer"
+            Html.button
+                ([ type_ "button"
                  , attribute "aria-label" ariaLabel
+                 , style "cursor" "pointer"
+                 , style "-webkit-appearance" "none"
+                 , style "appearance" "none"
+                 , style "background" "transparent"
+                 , style "border" "0"
+                 , style "padding" "0"
+                 , style "margin" "0"
+                 , style "font" "inherit"
+                 , style "color" "inherit"
                  , style "display" "flex"
                  , style "align-items" "center"
                  , style "flex-direction" <|

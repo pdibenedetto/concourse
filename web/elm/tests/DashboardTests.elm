@@ -1440,6 +1440,18 @@ all =
                         \_ ->
                             hdToggle
                                 |> Query.has [ style "cursor" "pointer" ]
+                    , test "is a native button element so it is keyboard accessible" <|
+                        \_ ->
+                            hdToggle
+                                |> Query.has
+                                    [ tag "button"
+                                    , attribute <| Attr.type_ "button"
+                                    ]
+                    , test "toggles high-density when activated" <|
+                        \_ ->
+                            hdToggle
+                                |> Event.simulate Event.click
+                                |> Event.expect (ApplicationMsgs.Update Msgs.ToggleHighDensity)
                     , test "displays the off state" <|
                         \_ ->
                             hdToggle
