@@ -1,5 +1,6 @@
 module Dashboard.Styles exposing
     ( asciiArt
+    , cardDropZone
     , cardFooter
     , cardTooltip
     , consoleIcon
@@ -8,8 +9,10 @@ module Dashboard.Styles exposing
     , dropdownContainer
     , dropdownItem
     , emptyCardBody
+    , endDropZone
     , footerLink
     , groupPageContent
+    , hdCardWrapper
     , highDensityToggle
     , info
     , infoBar
@@ -1067,6 +1070,67 @@ pipelineSectionHeader =
 -- HD List View Styles
 
 
+hdCardWrapper : Bool -> List (Html.Attribute msg)
+hdCardWrapper isBeingDragged =
+    [ style "display" "flex"
+    , style "flex-direction" "column"
+    , style "width" "100%"
+    , style "min-width" "800px"
+    , style "margin-bottom" "3px"
+    ]
+        ++ (if isBeingDragged then
+                [ style "width" "0"
+                , style "margin" "0 12.5px"
+                , style "overflow" "hidden"
+                ]
+
+            else
+                []
+           )
+
+
+cardDropZone : Bool -> List (Html.Attribute msg)
+cardDropZone active =
+    [ style "height"
+        (if active then
+            "8px"
+
+         else
+            "3px"
+        )
+    , style "width" "100%"
+    , style "background-color"
+        (if active then
+            Colors.dropTargetHighlight
+
+         else
+            "transparent"
+        )
+    , style "transition" "height 0.1s ease, background-color 0.1s ease"
+    ]
+
+
+endDropZone : { active : Bool, anyDragHappening : Bool } -> List (Html.Attribute msg)
+endDropZone { active, anyDragHappening } =
+    [ style "height"
+        (if anyDragHappening then
+            "50px"
+
+         else
+            "3px"
+        )
+    , style "width" "100%"
+    , style "background-color"
+        (if active then
+            Colors.dropTargetHighlight
+
+         else
+            "transparent"
+        )
+    , style "transition" "background-color 0.1s ease"
+    ]
+
+
 listViewTeamGroup : List (Html.Attribute msg)
 listViewTeamGroup =
     [ style "margin-bottom" "32px"
@@ -1078,7 +1142,7 @@ listViewTeamHeader =
     [ style "display" "flex"
     , style "align-items" "center"
     , style "margin-bottom" "32px"
-    , style "background" "#363636"
+    , style "background" ColorValues.grey80
     , style "z-index" "2"
     , style "opacity" "0.9"
     , style "padding-left" "32px"
@@ -1107,7 +1171,7 @@ listViewPipelineRow =
     [ style "display" "flex"
     , style "align-items" "center"
     , style "padding" "12px 16px"
-    , style "background-color" "#262626"
+    , style "background-color" ColorValues.grey90
     , style "width" "100%"
     , style "box-sizing" "border-box"
     ]
@@ -1205,7 +1269,7 @@ listViewInstancedRowLink =
 listViewInstanceGroupBar : List (Html.Attribute msg)
 listViewInstanceGroupBar =
     [ style "width" "12px"
-    , style "background-color" "#363636"
+    , style "background-color" ColorValues.grey80
     , style "flex-shrink" "0"
     ]
 
@@ -1243,7 +1307,7 @@ listViewInstancedPipelineButtons =
     [ style "display" "flex"
     , style "align-items" "center"
     , style "gap" "10px"
-    , style "background-color" "#262626"
+    , style "background-color" ColorValues.grey90
     , style "padding" "0 12px"
     , style "cursor" "default"
     ]

@@ -76,7 +76,7 @@ hdCardView { pipeline, pipelines, resourceError, dashboardView, query } =
             ++ Styles.instanceGroupCardHd
         )
     <|
-        [ Html.div
+        Html.div
             Styles.instanceGroupCardBodyHd
             [ InstanceGroupBadge.view ColorValues.grey20 <| List.length (pipeline :: pipelines)
             , Html.div
@@ -86,8 +86,7 @@ hdCardView { pipeline, pipelines, resourceError, dashboardView, query } =
                 )
                 [ Html.text pipeline.name ]
             ]
-        ]
-            ++ (if resourceError then
+            :: (if resourceError then
                     [ Html.div Styles.resourceErrorTriangle [] ]
 
                 else

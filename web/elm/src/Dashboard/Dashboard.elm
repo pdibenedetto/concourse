@@ -1532,13 +1532,10 @@ cardsView session params teamCards =
                                 , jobs = jobs
                                 , dashboardView = params.dashboardView
                                 , query = params.query
-                                , highDensity = params.highDensity
-                                , now = params.now
                                 , dragState = params.dragState
                                 , dropState = params.dropState
                                 }
                                 session
-                                session.hovered
                             )
 
                     else

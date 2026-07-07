@@ -15,7 +15,7 @@ import Concourse exposing (flattenJson)
 import Concourse.PipelineStatus
 import Dashboard.Grid as Grid
 import Dashboard.Grid.Constants as GridConstants
-import Dashboard.Group.Models exposing (Card(..), Pipeline, cardIdentifier, cardTeamName)
+import Dashboard.Group.Models exposing (Card(..), Pipeline, cardIdentifier, cardPipeline, cardTeamName)
 import Dashboard.Group.Tag as Tag
 import Dashboard.InstanceGroup as InstanceGroup
 import Dashboard.Models exposing (DragState(..), DropState(..))
@@ -274,22 +274,29 @@ hdView :
     , jobs : Dict ( Concourse.DatabaseID, Concourse.JobName ) Concourse.Job
     , dashboardView : Routes.DashboardView
     , query : String
-    , highDensity : Bool
-    , now : Maybe Time.Posix
     , dragState : DragState
     , dropState : DropState
     }
     -> Session
-    -> HoverState.HoverState
     -> Section Card
     -> List (Html Message)
-hdView { pipelinesWithResourceErrors, pipelineJobs, jobs, dashboardView, query, dragState, dropState } session _ { teamName, cards, header } =
+hdView { pipelinesWithResourceErrors, pipelineJobs, jobs, dashboardView, query, dragState, dropState } session { teamName, cards, header } =
     let
         headerElement =
             Html.div
                 [ class "dashboard-team-name" ]
                 [ Html.text header ]
                 :: (Maybe.Extra.toList <| Maybe.map (Tag.view True) (tag session teamName))
+
+        hdPipelineArgs p =
+            { pipeline = p
+            , resourceError = Set.member p.id pipelinesWithResourceErrors
+            , existingJobs =
+                pipelineJobs
+                    |> Dict.get p.id
+                    |> Maybe.withDefault []
+                    |> List.filterMap (\j -> Dict.get ( p.id, j ) jobs)
+            }
 
         teamPipelines =
             if List.isEmpty cards then
@@ -299,160 +306,53 @@ hdView { pipelinesWithResourceErrors, pipelineJobs, jobs, dashboardView, query, 
                 let
                     createCardWithDropZone card =
                         let
-                            cardHtml =
+                            isBeingDragged =
+                                case dragState of
+                                    Dragging currCard ->
+                                        cardIdentifier currCard == cardIdentifier card
+
+                                    _ ->
+                                        False
+
+                            dragAttributes =
+                                if cardIdentifier card /= "" then
+                                    [ attribute
+                                        "ondragstart"
+                                        "event.dataTransfer.setData('text/plain', '');"
+                                    , draggable "true"
+                                    , on "dragstart" (Json.Decode.succeed (DragStart card))
+                                    , on "dragend" (Json.Decode.succeed DragEnd)
+                                    ]
+
+                                else
+                                    []
+
+                            cardBody =
                                 case card of
                                     PipelineCard p ->
-                                        Html.div
-                                            ([ style "display" "flex"
-                                             , style "flex-direction" "column"
-                                             , style "width" "100%"
-                                             , style "min-width" "800px"
-                                             , style "margin-bottom" "3px"
-                                             ]
-                                                ++ (if cardIdentifier card /= "" then
-                                                        [ attribute
-                                                            "ondragstart"
-                                                            "event.dataTransfer.setData('text/plain', '');"
-                                                        , draggable "true"
-                                                        , on "dragstart"
-                                                            (Json.Decode.succeed (DragStart card))
-                                                        , on "dragend" (Json.Decode.succeed DragEnd)
-                                                        ]
-
-                                                    else
-                                                        []
-                                                   )
-                                                ++ (case dragState of
-                                                        Dragging currCard ->
-                                                            if cardIdentifier currCard == cardIdentifier card then
-                                                                [ style "width" "0"
-                                                                , style "margin" "0 12.5px"
-                                                                , style "overflow" "hidden"
-                                                                ]
-
-                                                            else
-                                                                []
-
-                                                        _ ->
-                                                            []
-                                                   )
-                                            )
-                                            [ Pipeline.hdPipelineView
-                                                session
-                                                { pipeline = p
-                                                , resourceError =
-                                                    pipelinesWithResourceErrors
-                                                        |> Set.member p.id
-                                                , existingJobs =
-                                                    pipelineJobs
-                                                        |> Dict.get p.id
-                                                        |> Maybe.withDefault []
-                                                        |> List.filterMap (\j -> Dict.get ( p.id, j ) jobs)
-                                                }
-                                            ]
+                                        Pipeline.hdPipelineView session (hdPipelineArgs p)
 
                                     InstancedPipelineCard p ->
-                                        Html.div
-                                            ([ style "display" "flex"
-                                             , style "flex-direction" "column"
-                                             , style "width" "100%"
-                                             , style "min-width" "800px"
-                                             , style "margin-bottom" "3px"
-                                             ]
-                                                ++ (if cardIdentifier card /= "" then
-                                                        [ attribute
-                                                            "ondragstart"
-                                                            "event.dataTransfer.setData('text/plain', '');"
-                                                        , draggable "true"
-                                                        , on "dragstart"
-                                                            (Json.Decode.succeed (DragStart card))
-                                                        , on "dragend" (Json.Decode.succeed DragEnd)
-                                                        ]
-
-                                                    else
-                                                        []
-                                                   )
-                                                ++ (case dragState of
-                                                        Dragging currCard ->
-                                                            if cardIdentifier currCard == cardIdentifier card then
-                                                                [ style "width" "0"
-                                                                , style "margin" "0 12.5px"
-                                                                , style "overflow" "hidden"
-                                                                ]
-
-                                                            else
-                                                                []
-
-                                                        _ ->
-                                                            []
-                                                   )
-                                            )
-                                            [ Pipeline.hdPipelineView
-                                                session
-                                                { pipeline = p
-                                                , resourceError =
-                                                    pipelinesWithResourceErrors
-                                                        |> Set.member p.id
-                                                , existingJobs =
-                                                    pipelineJobs
-                                                        |> Dict.get p.id
-                                                        |> Maybe.withDefault []
-                                                        |> List.filterMap (\j -> Dict.get ( p.id, j ) jobs)
-                                                }
-                                            ]
+                                        Pipeline.hdPipelineView session (hdPipelineArgs p)
 
                                     InstanceGroupCard p ps ->
-                                        Html.div
-                                            ([ style "display" "flex"
-                                             , style "flex-direction" "column"
-                                             , style "width" "100%"
-                                             , style "min-width" "800px"
-                                             , style "margin-bottom" "3px"
-                                             ]
-                                                ++ (if cardIdentifier card /= "" then
-                                                        [ attribute
-                                                            "ondragstart"
-                                                            "event.dataTransfer.setData('text/plain', '');"
-                                                        , draggable "true"
-                                                        , on "dragstart"
-                                                            (Json.Decode.succeed (DragStart card))
-                                                        , on "dragend" (Json.Decode.succeed DragEnd)
-                                                        ]
-
-                                                    else
-                                                        []
-                                                   )
-                                                ++ (case dragState of
-                                                        Dragging currCard ->
-                                                            if cardIdentifier currCard == cardIdentifier card then
-                                                                [ style "width" "0"
-                                                                , style "margin" "0 12.5px"
-                                                                , style "overflow" "hidden"
-                                                                ]
-
-                                                            else
-                                                                []
-
-                                                        _ ->
-                                                            []
-                                                   )
-                                            )
-                                            [ InstanceGroup.hdCardView
-                                                { pipeline = p
-                                                , pipelines = ps
-                                                , resourceError =
-                                                    List.any
-                                                        (\pipeline ->
-                                                            Set.member pipeline.id pipelinesWithResourceErrors
-                                                        )
-                                                        (p :: ps)
-                                                , dashboardView = dashboardView
-                                                , query = query
-                                                }
-                                            ]
+                                        InstanceGroup.hdCardView
+                                            { pipeline = p
+                                            , pipelines = ps
+                                            , resourceError =
+                                                List.any
+                                                    (\pipeline ->
+                                                        Set.member pipeline.id pipelinesWithResourceErrors
+                                                    )
+                                                    (p :: ps)
+                                            , dashboardView = dashboardView
+                                            , query = query
+                                            }
                         in
                         [ hdDropZoneView dragState dropState teamName card
-                        , cardHtml
+                        , Html.div
+                            (Styles.hdCardWrapper isBeingDragged ++ dragAttributes)
+                            [ cardBody ]
                         ]
                 in
                 cards
@@ -544,48 +444,22 @@ sortPipelinesForListView cards =
     cards
         |> List.sortBy
             (\card ->
-                case card of
-                    PipelineCard p ->
-                        ( if p.paused then
-                            1
+                let
+                    p =
+                        cardPipeline card
+                in
+                ( if p.paused then
+                    1
 
-                          else
-                            0
-                        , if p.archived then
-                            1
+                  else
+                    0
+                , if p.archived then
+                    1
 
-                          else
-                            0
-                        , p.name
-                        )
-
-                    InstancedPipelineCard p ->
-                        ( if p.paused then
-                            1
-
-                          else
-                            0
-                        , if p.archived then
-                            1
-
-                          else
-                            0
-                        , p.name
-                        )
-
-                    InstanceGroupCard p _ ->
-                        ( if p.paused then
-                            1
-
-                          else
-                            0
-                        , if p.archived then
-                            1
-
-                          else
-                            0
-                        , p.name
-                        )
+                  else
+                    0
+                , p.name
+                )
             )
 
 
@@ -604,22 +478,14 @@ renderPipelineRow :
     -> Html Message
 renderPipelineRow params session hovered card =
     let
+        pipelineId =
+            (cardPipeline card).id
+
         pipelineJobs =
-            case card of
-                InstanceGroupCard pipeline _ ->
-                    params.jobs
-                        |> Dict.filter (\( dbId, _ ) _ -> dbId == pipeline.id)
-                        |> Dict.values
-
-                InstancedPipelineCard pipeline ->
-                    params.jobs
-                        |> Dict.filter (\( dbId, _ ) _ -> dbId == pipeline.id)
-                        |> Dict.values
-
-                PipelineCard pipeline ->
-                    params.jobs
-                        |> Dict.filter (\( dbId, _ ) _ -> dbId == pipeline.id)
-                        |> Dict.values
+            params.pipelineJobs
+                |> Dict.get pipelineId
+                |> Maybe.withDefault []
+                |> List.filterMap (\j -> Dict.get ( pipelineId, j ) params.jobs)
 
         isBeingDragged =
             case params.dragState of
@@ -1153,26 +1019,12 @@ hdDropZoneView dragState dropState teamName targetCard =
                     False
     in
     Html.div
-        [ style "height"
-            (if active then
-                "8px"
-
-             else
-                "3px"
-            )
-        , style "width" "100%"
-        , style "background-color"
-            (if active then
-                "#2196F3"
-
-             else
-                "transparent"
-            )
-        , style "transition" "height 0.1s ease, background-color 0.1s ease"
-        , on "dragenter" (Json.Decode.succeed (DragOver (Before targetCard)))
-        , preventDefaultOn "dragover" (Json.Decode.succeed ( DragOver (Before targetCard), True ))
-        , stopPropagationOn "drop" (Json.Decode.succeed ( DragEnd, True ))
-        ]
+        (Styles.cardDropZone active
+            ++ [ on "dragenter" (Json.Decode.succeed (DragOver (Before targetCard)))
+               , preventDefaultOn "dragover" (Json.Decode.succeed ( DragOver (Before targetCard), True ))
+               , stopPropagationOn "drop" (Json.Decode.succeed ( DragEnd, True ))
+               ]
+        )
         []
 
 
@@ -1196,26 +1048,12 @@ endDropZoneView dragState dropState teamName =
                     False
     in
     Html.div
-        [ style "height"
-            (if anyDragHappening then
-                "50px"
-
-             else
-                "3px"
-            )
-        , style "width" "100%"
-        , style "background-color"
-            (if active then
-                "#2196F3"
-
-             else
-                "transparent"
-            )
-        , style "transition" "background-color 0.1s ease"
-        , on "dragenter" (Json.Decode.succeed (DragOver End))
-        , preventDefaultOn "dragover" (Json.Decode.succeed ( DragOver End, True ))
-        , stopPropagationOn "drop" (Json.Decode.succeed ( DragEnd, True ))
-        ]
+        (Styles.endDropZone { active = active, anyDragHappening = anyDragHappening }
+            ++ [ on "dragenter" (Json.Decode.succeed (DragOver End))
+               , preventDefaultOn "dragover" (Json.Decode.succeed ( DragOver End, True ))
+               , stopPropagationOn "drop" (Json.Decode.succeed ( DragEnd, True ))
+               ]
+        )
         []
 
 
