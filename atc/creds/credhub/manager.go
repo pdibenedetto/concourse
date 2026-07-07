@@ -18,7 +18,7 @@ type CredHubManager struct {
 
 	PathPrefix string `long:"path-prefix" default:"/concourse" description:"Path under which to namespace credential lookup."`
 
-	SharedPath string `long:"shared-path" description:"CredHub parameter path used for shared parameters"`
+	SharedPath string `long:"shared-path" description:"Path under which to lookup shared credentials."`
 
 	TLS    TLS
 	UAA    UAA

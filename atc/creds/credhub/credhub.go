@@ -28,7 +28,7 @@ func (c CredHubAtc) NewSecretLookupPaths(teamName string, pipelineName string, a
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(c.prefix+"/"))
 	}
 	if c.sharedPath != "" {
-		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(c.sharedPath+"/"))
+		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(path.Join(c.prefix, c.sharedPath)+"/"))
 	}
 	return lookupPaths
 }
