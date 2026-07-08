@@ -282,7 +282,7 @@ func (s *IntegrationSuite) TestHermeticContainerNetworkEgress() {
 	s.NoError(err)
 
 	s.Equal(exitCode, 1, "Process in container should not be able to connect to external network")
-	s.Contains(buf.String(), "failed performing http getGet \"http://example.com\": context deadline exceeded")
+	s.Contains(buf.String(), "failed performing http getGet \"http://example.com\": dial tcp: lookup example.com")
 }
 
 // TestContainerNetworkEgressWithRestrictedNetworks verifies that a process that we run in a
