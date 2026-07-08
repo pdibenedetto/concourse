@@ -909,6 +909,7 @@ func (s *IntegrationSuite) TestCustomDNS() {
 		Handle:     handle,
 		RootFSPath: "raw://" + s.rootfs,
 		Privileged: true,
+		NetOut:     []garden.NetOutRule{{}},
 	})
 	s.NoError(err)
 
