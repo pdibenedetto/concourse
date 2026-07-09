@@ -85,6 +85,11 @@ var (
 	client *http.Client
 )
 
+func TestAPI(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "API Suite")
+}
+
 type fakeEventHandlerFactory struct {
 	build db.BuildForAPI
 
@@ -170,6 +175,31 @@ var _ = BeforeEach(func() {
 	fakePolicyChecker = new(policycheckerfakes.FakePolicyChecker)
 	fakePolicyChecker.CheckReturns(policy.PassedPolicyCheck(), nil)
 
+	server = newApiTestServer()
+
+	client = &http.Client{
+		Transport: &http.Transport{},
+	}
+})
+
+var _ = AfterEach(func() {
+	os.Remove(cliDownloadsDir)
+	server.Close()
+})
+
+func newApiTestServer(opts ...apiConfigOpt) *httptest.Server {
+	testServerConfig := &apiServerConfig{
+		workerCount:              1,
+		componentStaleMultiplier: 2.0,
+		concourseVersion:         "1.2.3",
+		workerVersion:            "4.5.6",
+		interceptUpdateInterval:  time.Second,
+	}
+
+	for _, opt := range opts {
+		opt(testServerConfig)
+	}
+
 	checkPipelineAccessHandlerFactory := auth.NewCheckPipelineAccessHandlerFactory(dbTeamFactory)
 	checkBuildReadAccessHandlerFactory := auth.NewCheckBuildReadAccessHandlerFactory(dbBuildFactory)
 	checkBuildWriteAccessHandlerFactory := auth.NewCheckBuildWriteAccessHandlerFactory(dbBuildFactory)
@@ -189,7 +219,7 @@ var _ = BeforeEach(func() {
 		logger,
 
 		externalURL,
-		"",
+		"", // OIDC issuer
 		clusterName,
 
 		apiWrapper,
@@ -209,8 +239,8 @@ var _ = BeforeEach(func() {
 		dbUserFactory,
 		dbComponentFactory,
 		fakeDbConn,
-		1,   // minWorkerCount
-		2.0, // componentStaleMultiplier
+		testServerConfig.workerCount,
+		testServerConfig.componentStaleMultiplier,
 
 		constructedEventHandler.Construct,
 
@@ -221,13 +251,13 @@ var _ = BeforeEach(func() {
 		isTLSEnabled,
 
 		cliDownloadsDir,
-		"1.2.3",
-		"4.5.6",
+		testServerConfig.concourseVersion,
+		testServerConfig.workerVersion,
 		fakeSecretManager,
 		fakeVarSourcePool,
 		credsManagers,
 		interceptTimeoutFactory,
-		time.Second,
+		testServerConfig.interceptUpdateInterval,
 		dbWall,
 		fakeClock,
 		dbSigningKeyFactory,
@@ -249,63 +279,21 @@ var _ = BeforeEach(func() {
 		Handler: accessorHandler,
 	}
 
-	server = httptest.NewServer(handler)
-
-	client = &http.Client{
-		Transport: &http.Transport{},
-	}
-})
-
-var _ = AfterEach(func() {
-	os.Remove(cliDownloadsDir)
-	server.Close()
-})
-
-// buildTestServer constructs and starts a test HTTP server with the given minWorkerCount.
-// Use this in tests that need a non-default minWorkerCount (e.g. to exercise the degraded worker path).
-// Callers are responsible for closing the returned server.
-func buildTestServer(workerCount int) *httptest.Server {
-	checkPipelineAccessHandlerFactory := auth.NewCheckPipelineAccessHandlerFactory(dbTeamFactory)
-	checkBuildReadAccessHandlerFactory := auth.NewCheckBuildReadAccessHandlerFactory(dbBuildFactory)
-	checkBuildWriteAccessHandlerFactory := auth.NewCheckBuildWriteAccessHandlerFactory(dbBuildFactory)
-	checkWorkerTeamAccessHandlerFactory := auth.NewCheckWorkerTeamAccessHandlerFactory(dbWorkerFactory)
-
-	apiWrapper := wrappa.MultiWrappa{
-		wrappa.NewPolicyCheckWrappa(logger, fakePolicyChecker),
-		wrappa.NewAPIAuthWrappa(
-			checkPipelineAccessHandlerFactory,
-			checkBuildReadAccessHandlerFactory,
-			checkBuildWriteAccessHandlerFactory,
-			checkWorkerTeamAccessHandlerFactory,
-		),
-	}
-
-	handler, err := api.NewHandler(
-		logger,
-		externalURL, "", clusterName,
-		apiWrapper,
-		dbTeamFactory, dbPipelineFactory, dbJobFactory, dbResourceFactory,
-		dbWorkerFactory, dbWorkerTeamFactory, fakeVolumeRepository, fakeContainerRepository,
-		fakeDestroyer, dbBuildFactory, dbCheckFactory, dbResourceConfigFactory,
-		dbUserFactory, dbComponentFactory, fakeDbConn,
-		workerCount,
-		2.0,
-		constructedEventHandler.Construct,
-		fakeWorkerPool, sink, isTLSEnabled, cliDownloadsDir,
-		"1.2.3", "4.5.6",
-		fakeSecretManager, fakeVarSourcePool, credsManagers,
-		interceptTimeoutFactory, time.Second, dbWall, fakeClock, dbSigningKeyFactory,
-	)
-	Expect(err).NotTo(HaveOccurred())
-
-	accessorHandler := accessor.NewHandler(
-		logger, "some-action", handler, fakeAccessor,
-		new(auditorfakes.FakeAuditor), map[string]string{},
-	)
-	return httptest.NewServer(wrappa.LoggerHandler{Logger: logger, Handler: accessorHandler})
+	return httptest.NewServer(handler)
 }
 
-func TestAPI(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "API Suite")
+type apiServerConfig struct {
+	workerCount              int
+	componentStaleMultiplier float64
+	concourseVersion         string
+	workerVersion            string
+	interceptUpdateInterval  time.Duration
+}
+
+type apiConfigOpt func(*apiServerConfig)
+
+func withWorkerCount(count int) apiConfigOpt {
+	return func(a *apiServerConfig) {
+		a.workerCount = count
+	}
 }

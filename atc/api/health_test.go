@@ -160,7 +160,7 @@ var _ = Describe("Health API", func() {
 					makeNamedWorker("worker-02", db.WorkerStateRunning),
 					makeNamedWorker("worker-03", db.WorkerStateStalled),
 				}, nil)
-				customServer = buildTestServer(3)
+				customServer = newApiTestServer(withWorkerCount(3))
 			})
 
 			AfterEach(func() {
