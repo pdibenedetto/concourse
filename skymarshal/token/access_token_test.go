@@ -79,6 +79,16 @@ var _ = Describe("Access Tokens", func() {
 				expectBody:       `{"access_token":"123abc","token_type":"bearer","expires_in":1234,"id_token":"a.b.c"}`,
 			},
 			{
+				it: "converts RFC 8693 token-exchange responses, which have no id_token",
+
+				path:       "/sky/issuer/token",
+				statusCode: 200,
+				body:       `{"access_token":"a.b.c","issued_token_type":"urn:ietf:params:oauth:token-type:access_token","token_type":"bearer","expires_in":1234}`,
+
+				expectStatusCode: 200,
+				expectBody:       `{"access_token":"123abc","token_type":"bearer","expires_in":1234,"issued_token_type":"urn:ietf:params:oauth:token-type:access_token"}`,
+			},
+			{
 				it: "forwards failure response",
 
 				path:       "/sky/issuer/token",
@@ -168,6 +178,33 @@ var _ = Describe("Access Tokens", func() {
 				Expect(rec.Body.String()).To(Equal(t.expectBody))
 			})
 		}
+
+		Describe("choosing the token to parse claims from", func() {
+			var serveTokenResponse = func(body string) {
+				baseHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(200)
+					w.Write([]byte(body))
+				})
+				handler := token.StoreAccessToken(dummyLogger, baseHandler, generator, claimsParser, accessTokenFactory, userFactory, displayUserIdGenerator)
+				r, _ := http.NewRequest("GET", "/sky/issuer/token", nil)
+				generator.GenerateAccessTokenReturns("123abc", nil)
+				handler.ServeHTTP(httptest.NewRecorder(), r)
+			}
+
+			It("parses claims from the id_token when present", func() {
+				serveTokenResponse(`{"access_token":"123","token_type":"bearer","expires_in":1234,"id_token":"a.b.c"}`)
+
+				Expect(claimsParser.ParseClaimsCallCount()).To(Equal(1))
+				Expect(claimsParser.ParseClaimsArgsForCall(0)).To(Equal("a.b.c"))
+			})
+
+			It("parses claims from the access_token when id_token is absent (RFC 8693 token exchange)", func() {
+				serveTokenResponse(`{"access_token":"x.y.z","issued_token_type":"urn:ietf:params:oauth:token-type:access_token","token_type":"bearer","expires_in":1234}`)
+
+				Expect(claimsParser.ParseClaimsCallCount()).To(Equal(1))
+				Expect(claimsParser.ParseClaimsArgsForCall(0)).To(Equal("x.y.z"))
+			})
+		})
 	})
 
 	Describe("Token Generation", func() {
