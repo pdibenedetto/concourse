@@ -170,6 +170,43 @@ func LoadTarget(selectedTarget TargetName, tracing bool) (Target, error) {
 	), nil
 }
 
+// Use for unauthenticated endpoints of targets, like (health, info, etc.).
+func LoadTargetWithoutAuth(selectedTarget TargetName, tracing bool) (Target, error) {
+	var clientCertificate []tls.Certificate
+
+	targetProps, err := selectTarget(selectedTarget)
+	if err != nil {
+		return nil, err
+	}
+
+	caCertPool, err := loadCACertPool(targetProps.CACert)
+	if err != nil {
+		return nil, err
+	}
+
+	clientCertificate, err = loadClientCertificate(targetProps.ClientCertPath, targetProps.ClientKeyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	httpClient := defaultHttpClient(nil, targetProps.Insecure, caCertPool, clientCertificate)
+	client := concourse.NewClient(targetProps.API, httpClient, tracing)
+
+	return NewTarget(
+		selectedTarget,
+		targetProps.TeamName,
+		targetProps.API,
+		targetProps.Token,
+		targetProps.CACert,
+		caCertPool,
+		targetProps.ClientCertPath,
+		targetProps.ClientKeyPath,
+		clientCertificate,
+		targetProps.Insecure,
+		client,
+	), nil
+}
+
 func LoadUnauthenticatedTarget(
 	selectedTarget TargetName,
 	teamName string,

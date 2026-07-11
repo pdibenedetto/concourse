@@ -18,7 +18,7 @@ type HealthCommand struct {
 }
 
 func (command *HealthCommand) Execute([]string) error {
-	target, err := rc.LoadTarget(Fly.Target, Fly.Verbose)
+	target, err := rc.LoadTargetWithoutAuth(Fly.Target, Fly.Verbose)
 	if err != nil {
 		return err
 	}

@@ -22,8 +22,6 @@ var _ = Describe("fly health", func() {
 	)
 
 	BeforeEach(func() {
-		// Write a pre-authenticated target and reset the server so the login
-		// handlers queued by the suite BeforeEach are discarded.
 		createFlyRc(rc.Targets{
 			targetName: {
 				API:      atcServer.URL(),
@@ -82,6 +80,26 @@ var _ = Describe("fly health", func() {
 					{{Contents: "scheduler"}, {Contents: "healthy", Color: ui.SucceededColor}, {Contents: "last ran: 2024-01-01T11:59:00Z"}},
 				},
 			}))
+		})
+
+		Context("when the token is expired or missing", func() {
+			BeforeEach(func() {
+				createFlyRc(rc.Targets{
+					targetName: {
+						API:      atcServer.URL(),
+						TeamName: teamName,
+						Token:    &rc.TargetToken{Type: "Bearer", Value: validAccessToken(time.Now().Add(-time.Hour))},
+					},
+				})
+			})
+
+			It("succeeds without requiring a valid token", func() {
+				sess, err := gexec.Start(flyCmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(sess).Should(gexec.Exit(0))
+				Expect(sess.Out).To(gbytes.Say("ok"))
+			})
 		})
 
 		Context("when --json is given", func() {
