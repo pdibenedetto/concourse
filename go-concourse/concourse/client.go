@@ -27,6 +27,7 @@ type Client interface {
 	PruneWorker(workerName string) error
 	LandWorker(workerName string) error
 	GetInfo() (atc.Info, error)
+	GetHealth() (atc.Health, error)
 	GetCLIReader(arch, platform string) (io.ReadCloser, http.Header, error)
 	ListPipelines() ([]atc.Pipeline, error)
 	ListAllJobs() ([]atc.Job, error)
