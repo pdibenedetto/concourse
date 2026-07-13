@@ -2,15 +2,13 @@ package wrappa
 
 import (
 	"net/http"
-
-	"github.com/concourse/concourse/atc"
 )
 
 type SecurityHandler struct {
 	XFrameOptions           string
 	ContentSecurityPolicy   string
 	StrictTransportSecurity string
-	AdditionalHTTPHeaders   atc.HTTPHeadersFlag
+	CustomHTTPHeaders       map[string]string
 	Handler                 http.Handler
 }
 
@@ -27,7 +25,7 @@ func (handler SecurityHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Download-Options", "noopen")
 	w.Header().Set("Cache-Control", "no-store, private")
-	for name, value := range handler.AdditionalHTTPHeaders {
+	for name, value := range handler.CustomHTTPHeaders {
 		w.Header().Set(name, value)
 	}
 	handler.Handler.ServeHTTP(w, r)
