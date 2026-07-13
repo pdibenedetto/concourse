@@ -3,7 +3,6 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"path"
 	"strings"
 	"time"
 
@@ -35,7 +34,8 @@ func (secrets Secrets) NewSecretLookupPaths(teamName string, pipelineName string
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+"/"))
 	}
 	if secrets.sharedPath != "" {
-		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(path.Join(secrets.namespacePrefix, secrets.sharedPath)+"/"))
+		sharedPath := strings.ReplaceAll(secrets.sharedPath, "/", ".")
+		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+"/"+sharedPath+"."))
 	}
 	return lookupPaths
 }

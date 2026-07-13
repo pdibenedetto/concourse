@@ -146,4 +146,74 @@ var _ = Describe("Kubernetes", func() {
 			Result:   "some-field-value",
 		}),
 	)
+
+	Context("with a shared path", func() {
+		BeforeEach(func() {
+			fakeClientset = fake.NewSimpleClientset()
+
+			factory := kubernetes.NewKubernetesFactory(
+				lagertest.NewTestLogger("test"),
+				fakeClientset,
+				"prefix-",
+				"shared",
+			)
+
+			vs = creds.NewVariables(factory.NewSecrets(), creds.SecretLookupParams{Team: "some-team", Pipeline: "some-pipeline"}, false)
+		})
+
+		DescribeTable("var lookup", func(ex Example) {
+			ex.Assert(vs)
+		},
+			Entry("shared-path scoped vars with a value field", Example{
+				Setup: func() {
+					fakeClientset.CoreV1().Secrets("prefix-").Create(context.TODO(), &v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "shared." + secretName,
+						},
+						Data: map[string][]byte{
+							"value": []byte("some-shared-value"),
+						},
+					}, metav1.CreateOptions{})
+				},
+
+				Template: "((" + secretName + "))",
+				Result:   "some-shared-value",
+			}),
+		)
+	})
+
+	Context("with a nested shared path", func() {
+		BeforeEach(func() {
+			fakeClientset = fake.NewSimpleClientset()
+
+			factory := kubernetes.NewKubernetesFactory(
+				lagertest.NewTestLogger("test"),
+				fakeClientset,
+				"prefix-",
+				"shared/nested",
+			)
+
+			vs = creds.NewVariables(factory.NewSecrets(), creds.SecretLookupParams{Team: "some-team", Pipeline: "some-pipeline"}, false)
+		})
+
+		DescribeTable("var lookup", func(ex Example) {
+			ex.Assert(vs)
+		},
+			Entry("nested shared-path scoped vars with a value field", Example{
+				Setup: func() {
+					fakeClientset.CoreV1().Secrets("prefix-").Create(context.TODO(), &v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "shared.nested." + secretName,
+						},
+						Data: map[string][]byte{
+							"value": []byte("some-nested-shared-value"),
+						},
+					}, metav1.CreateOptions{})
+				},
+
+				Template: "((" + secretName + "))",
+				Result:   "some-nested-shared-value",
+			}),
+		)
+	})
 })
