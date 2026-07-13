@@ -30,12 +30,11 @@ func (secrets Secrets) NewSecretLookupPaths(teamName string, pipelineName string
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+teamName+"/"+pipelineName+"."))
 	}
 	lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+teamName+"/"))
+	if secrets.sharedPath != "" {
+		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+secrets.sharedPath+"/"))
+	}
 	if allowRootPath {
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+"/"))
-	}
-	if secrets.sharedPath != "" {
-		sharedPath := strings.ReplaceAll(secrets.sharedPath, "/", ".")
-		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+"/"+sharedPath+"."))
 	}
 	return lookupPaths
 }
