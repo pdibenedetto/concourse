@@ -136,6 +136,18 @@ type FakeClient struct {
 		result2 http.Header
 		result3 error
 	}
+	GetHealthStub        func() (atc.Health, error)
+	getHealthMutex       sync.RWMutex
+	getHealthArgsForCall []struct {
+	}
+	getHealthReturns struct {
+		result1 atc.Health
+		result2 error
+	}
+	getHealthReturnsOnCall map[int]struct {
+		result1 atc.Health
+		result2 error
+	}
 	GetInfoStub        func() (atc.Info, error)
 	getInfoMutex       sync.RWMutex
 	getInfoArgsForCall []struct {
@@ -959,6 +971,62 @@ func (fake *FakeClient) GetCLIReaderReturnsOnCall(i int, result1 io.ReadCloser, 
 		result2 http.Header
 		result3 error
 	}{result1, result2, result3}
+}
+
+func (fake *FakeClient) GetHealth() (atc.Health, error) {
+	fake.getHealthMutex.Lock()
+	ret, specificReturn := fake.getHealthReturnsOnCall[len(fake.getHealthArgsForCall)]
+	fake.getHealthArgsForCall = append(fake.getHealthArgsForCall, struct {
+	}{})
+	stub := fake.GetHealthStub
+	fakeReturns := fake.getHealthReturns
+	fake.recordInvocation("GetHealth", []interface{}{})
+	fake.getHealthMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeClient) GetHealthCallCount() int {
+	fake.getHealthMutex.RLock()
+	defer fake.getHealthMutex.RUnlock()
+	return len(fake.getHealthArgsForCall)
+}
+
+func (fake *FakeClient) GetHealthCalls(stub func() (atc.Health, error)) {
+	fake.getHealthMutex.Lock()
+	defer fake.getHealthMutex.Unlock()
+	fake.GetHealthStub = stub
+}
+
+func (fake *FakeClient) GetHealthReturns(result1 atc.Health, result2 error) {
+	fake.getHealthMutex.Lock()
+	defer fake.getHealthMutex.Unlock()
+	fake.GetHealthStub = nil
+	fake.getHealthReturns = struct {
+		result1 atc.Health
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) GetHealthReturnsOnCall(i int, result1 atc.Health, result2 error) {
+	fake.getHealthMutex.Lock()
+	defer fake.getHealthMutex.Unlock()
+	fake.GetHealthStub = nil
+	if fake.getHealthReturnsOnCall == nil {
+		fake.getHealthReturnsOnCall = make(map[int]struct {
+			result1 atc.Health
+			result2 error
+		})
+	}
+	fake.getHealthReturnsOnCall[i] = struct {
+		result1 atc.Health
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeClient) GetInfo() (atc.Info, error) {
