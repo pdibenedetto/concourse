@@ -12,13 +12,15 @@ type kubernetesFactory struct {
 
 	client          kubernetes.Interface
 	namespacePrefix string
+	sharedPath      string
 }
 
-func NewKubernetesFactory(logger lager.Logger, client kubernetes.Interface, namespacePrefix string) *kubernetesFactory {
+func NewKubernetesFactory(logger lager.Logger, client kubernetes.Interface, namespacePrefix, sharedPath string) *kubernetesFactory {
 	factory := &kubernetesFactory{
 		logger:          logger,
 		client:          client,
 		namespacePrefix: namespacePrefix,
+		sharedPath:      sharedPath,
 	}
 
 	return factory
@@ -29,5 +31,6 @@ func (factory *kubernetesFactory) NewSecrets() creds.Secrets {
 		logger:          factory.logger,
 		client:          factory.client,
 		namespacePrefix: factory.namespacePrefix,
+		sharedPath:      factory.sharedPath,
 	}
 }

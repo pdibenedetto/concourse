@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ type Secrets struct {
 
 	client          kubernetes.Interface
 	namespacePrefix string
+	sharedPath      string
 }
 
 // NewSecretLookupPaths defines how variables will be searched in the underlying secret manager
@@ -31,6 +33,9 @@ func (secrets Secrets) NewSecretLookupPaths(teamName string, pipelineName string
 	lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+teamName+"/"))
 	if allowRootPath {
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+"/"))
+	}
+	if secrets.sharedPath != "" {
+		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(path.Join(secrets.namespacePrefix, secrets.sharedPath)+"/"))
 	}
 	return lookupPaths
 }

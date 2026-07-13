@@ -16,6 +16,7 @@ type KubernetesManager struct {
 	InClusterConfig bool   `long:"in-cluster" description:"Enables the in-cluster client."`
 	ConfigPath      string `long:"config-path" description:"Path to Kubernetes config when running ATC outside Kubernetes."`
 	NamespacePrefix string `long:"namespace-prefix" default:"concourse-" description:"Prefix to use for Kubernetes namespaces under which secrets will be looked up."`
+	SharedPath      string `long:"shared-path" default:"path under which to lookup for shared credentials"`
 }
 
 func (manager *KubernetesManager) MarshalJSON() ([]byte, error) {
@@ -24,6 +25,7 @@ func (manager *KubernetesManager) MarshalJSON() ([]byte, error) {
 		"in_cluster_config": manager.InClusterConfig,
 		"config_path":       manager.ConfigPath,
 		"namespace_config":  manager.NamespacePrefix,
+		"shared_path":       manager.SharedPath,
 	})
 }
 
@@ -69,7 +71,7 @@ func (manager KubernetesManager) NewSecretsFactory(logger lager.Logger) (creds.S
 		return nil, err
 	}
 
-	return NewKubernetesFactory(logger, clientset, manager.NamespacePrefix), nil
+	return NewKubernetesFactory(logger, clientset, manager.NamespacePrefix, manager.SharedPath), nil
 }
 
 func (manager KubernetesManager) Close(logger lager.Logger) {
