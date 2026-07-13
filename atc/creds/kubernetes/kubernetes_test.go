@@ -61,6 +61,7 @@ var _ = Describe("Kubernetes", func() {
 			lagertest.NewTestLogger("test"),
 			fakeClientset,
 			"prefix-",
+			"",
 		)
 
 		vs = creds.NewVariables(factory.NewSecrets(), creds.SecretLookupParams{Team: "some-team", Pipeline: "some-pipeline"}, false)
