@@ -131,6 +131,45 @@ var _ = Describe("fly health", func() {
 		})
 	})
 
+	Context("when a component is paused and has previously run", func() {
+		BeforeEach(func() {
+			healthPayload.Components = []atc.ComponentHealth{
+				{
+					Name:    atc.ComponentScheduler,
+					Status:  atc.HealthStatusHealthy,
+					Paused:  true,
+					LastRan: time.Date(2024, 1, 1, 11, 59, 0, 0, time.UTC),
+				},
+			}
+			atcServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/v1/health"),
+					ghttp.RespondWithJSONEncoded(200, healthPayload),
+				),
+			)
+		})
+
+		It("shows both paused and last ran in the detail column", func() {
+			sess, err := gexec.Start(flyCmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(sess).Should(gexec.Exit(0))
+			Expect(sess.Out).To(PrintTable(ui.Table{
+				Headers: ui.TableRow{
+					{Contents: "subsystem", Color: color.New(color.Bold)},
+					{Contents: "status", Color: color.New(color.Bold)},
+					{Contents: "detail", Color: color.New(color.Bold)},
+				},
+				Data: []ui.TableRow{
+					{{Contents: "overall"}, {Contents: "ok", Color: ui.SucceededColor}, {Contents: "2024-01-01T12:00:00Z"}},
+					{{Contents: "database"}, {Contents: "healthy", Color: ui.SucceededColor}, {Contents: ""}},
+					{{Contents: "workers"}, {Contents: "healthy", Color: ui.SucceededColor}, {Contents: "2/2 running"}},
+					{{Contents: "scheduler"}, {Contents: "healthy", Color: ui.SucceededColor}, {Contents: "paused, last ran: 2024-01-01T11:59:00Z"}},
+				},
+			}))
+		})
+	})
+
 	Context("when the server returns an unexpected error", func() {
 		BeforeEach(func() {
 			atcServer.AppendHandlers(

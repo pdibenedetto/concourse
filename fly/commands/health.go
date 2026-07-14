@@ -71,17 +71,20 @@ func (command *HealthCommand) renderTable(health atc.Health) error {
 	})
 
 	for _, c := range health.Components {
-		detail := ""
-		if !c.LastRan.IsZero() {
-			detail = "last ran: " + c.LastRan.UTC().Format(time.RFC3339)
-		}
+		var details []string
+
 		if c.Paused {
-			detail = "paused"
+			details = append(details, "paused")
 		}
+
+		if !c.LastRan.IsZero() {
+			details = append(details, "last ran: "+c.LastRan.UTC().Format(time.RFC3339))
+		}
+
 		table.Data = append(table.Data, ui.TableRow{
 			{Contents: c.Name},
 			statusCell(string(c.Status)),
-			{Contents: detail},
+			{Contents: strings.Join(details, ", ")},
 		})
 	}
 
