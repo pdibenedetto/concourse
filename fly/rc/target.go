@@ -139,18 +139,19 @@ func LoadTarget(selectedTarget TargetName, tracing bool) (Target, error) {
 	if err != nil {
 		return nil, err
 	}
-	return buildTarget(selectedTarget, targetProps, targetProps.Token, tracing)
+	return buildTarget(selectedTarget, targetProps, true, tracing)
 }
 
+// Use for unauthenticated endpoints of targets, like (health, info, etc.).
 func LoadTargetWithoutAuth(selectedTarget TargetName, tracing bool) (Target, error) {
 	targetProps, err := selectTarget(selectedTarget)
 	if err != nil {
 		return nil, err
 	}
-	return buildTarget(selectedTarget, targetProps, nil, tracing)
+	return buildTarget(selectedTarget, targetProps, false, tracing)
 }
 
-func buildTarget(selectedTarget TargetName, targetProps TargetProps, token *TargetToken, tracing bool) (Target, error) {
+func buildTarget(selectedTarget TargetName, targetProps TargetProps, withAuth bool, tracing bool) (Target, error) {
 	var clientCertificate []tls.Certificate
 
 	caCertPool, err := loadCACertPool(targetProps.CACert)
@@ -163,14 +164,19 @@ func buildTarget(selectedTarget TargetName, targetProps TargetProps, token *Targ
 		return nil, err
 	}
 
-	httpClient := defaultHttpClient(token, targetProps.Insecure, caCertPool, clientCertificate)
+	var httpToken *TargetToken
+	if withAuth {
+		httpToken = targetProps.Token
+	}
+
+	httpClient := defaultHttpClient(httpToken, targetProps.Insecure, caCertPool, clientCertificate)
 	client := concourse.NewClient(targetProps.API, httpClient, tracing)
 
 	return NewTarget(
 		selectedTarget,
 		targetProps.TeamName,
 		targetProps.API,
-		token,
+		targetProps.Token,
 		targetProps.CACert,
 		caCertPool,
 		targetProps.ClientCertPath,
