@@ -16,7 +16,7 @@ type KubernetesManager struct {
 	InClusterConfig bool   `long:"in-cluster" description:"Enables the in-cluster client."`
 	ConfigPath      string `long:"config-path" description:"Path to Kubernetes config when running ATC outside Kubernetes."`
 	NamespacePrefix string `long:"namespace-prefix" default:"concourse-" description:"Prefix to use for Kubernetes namespaces under which secrets will be looked up."`
-	SharedPath      string `long:"shared-path" description:"Path under which to lookup shared credentials."`
+	SharedPath      string `long:"shared-path" description:"Path under which to look up shared credentials. This value is appended to the configured namespacePrefix to determine the shared namespace."`
 }
 
 func (manager *KubernetesManager) MarshalJSON() ([]byte, error) {

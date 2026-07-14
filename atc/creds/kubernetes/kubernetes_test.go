@@ -166,9 +166,9 @@ var _ = Describe("Kubernetes", func() {
 		},
 			Entry("shared-path scoped vars with a value field", Example{
 				Setup: func() {
-					fakeClientset.CoreV1().Secrets("prefix-").Create(context.TODO(), &v1.Secret{
+					fakeClientset.CoreV1().Secrets("prefix-shared").Create(context.TODO(), &v1.Secret{
 						ObjectMeta: metav1.ObjectMeta{
-							Name: "shared." + secretName,
+							Name: secretName,
 						},
 						Data: map[string][]byte{
 							"value": []byte("some-shared-value"),
@@ -182,7 +182,7 @@ var _ = Describe("Kubernetes", func() {
 		)
 	})
 
-	Context("with a nested shared path", func() {
+	Context("with a custom shared path suffix", func() {
 		BeforeEach(func() {
 			fakeClientset = fake.NewSimpleClientset()
 
@@ -190,7 +190,7 @@ var _ = Describe("Kubernetes", func() {
 				lagertest.NewTestLogger("test"),
 				fakeClientset,
 				"prefix-",
-				"shared/nested",
+				"shared-nested",
 			)
 
 			vs = creds.NewVariables(factory.NewSecrets(), creds.SecretLookupParams{Team: "some-team", Pipeline: "some-pipeline"}, false)
@@ -201,9 +201,9 @@ var _ = Describe("Kubernetes", func() {
 		},
 			Entry("nested shared-path scoped vars with a value field", Example{
 				Setup: func() {
-					fakeClientset.CoreV1().Secrets("prefix-").Create(context.TODO(), &v1.Secret{
+					fakeClientset.CoreV1().Secrets("prefix-shared-nested").Create(context.TODO(), &v1.Secret{
 						ObjectMeta: metav1.ObjectMeta{
-							Name: "shared.nested." + secretName,
+							Name: secretName,
 						},
 						Data: map[string][]byte{
 							"value": []byte("some-nested-shared-value"),
