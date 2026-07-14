@@ -135,49 +135,24 @@ func LoadTargetFromURL(url, team string, tracing bool) (Target, TargetName, erro
 }
 
 func LoadTarget(selectedTarget TargetName, tracing bool) (Target, error) {
-	var clientCertificate []tls.Certificate
-
 	targetProps, err := selectTarget(selectedTarget)
 	if err != nil {
 		return nil, err
 	}
-
-	caCertPool, err := loadCACertPool(targetProps.CACert)
-	if err != nil {
-		return nil, err
-	}
-
-	clientCertificate, err = loadClientCertificate(targetProps.ClientCertPath, targetProps.ClientKeyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := defaultHttpClient(targetProps.Token, targetProps.Insecure, caCertPool, clientCertificate)
-	client := concourse.NewClient(targetProps.API, httpClient, tracing)
-
-	return NewTarget(
-		selectedTarget,
-		targetProps.TeamName,
-		targetProps.API,
-		targetProps.Token,
-		targetProps.CACert,
-		caCertPool,
-		targetProps.ClientCertPath,
-		targetProps.ClientKeyPath,
-		clientCertificate,
-		targetProps.Insecure,
-		client,
-	), nil
+	return buildTarget(selectedTarget, targetProps, true, tracing)
 }
 
 // Use for unauthenticated endpoints of targets, like (health, info, etc.).
 func LoadTargetWithoutAuth(selectedTarget TargetName, tracing bool) (Target, error) {
-	var clientCertificate []tls.Certificate
-
 	targetProps, err := selectTarget(selectedTarget)
 	if err != nil {
 		return nil, err
 	}
+	return buildTarget(selectedTarget, targetProps, false, tracing)
+}
+
+func buildTarget(selectedTarget TargetName, targetProps TargetProps, withAuth bool, tracing bool) (Target, error) {
+	var clientCertificate []tls.Certificate
 
 	caCertPool, err := loadCACertPool(targetProps.CACert)
 	if err != nil {
@@ -189,7 +164,12 @@ func LoadTargetWithoutAuth(selectedTarget TargetName, tracing bool) (Target, err
 		return nil, err
 	}
 
-	httpClient := defaultHttpClient(nil, targetProps.Insecure, caCertPool, clientCertificate)
+	var httpToken *TargetToken
+	if withAuth {
+		httpToken = targetProps.Token
+	}
+
+	httpClient := defaultHttpClient(httpToken, targetProps.Insecure, caCertPool, clientCertificate)
 	client := concourse.NewClient(targetProps.API, httpClient, tracing)
 
 	return NewTarget(
