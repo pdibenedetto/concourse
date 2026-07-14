@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/concourse/concourse/atc"
-	"github.com/concourse/concourse/fly/rc"
 	"github.com/concourse/concourse/fly/ui"
 	"github.com/fatih/color"
 	. "github.com/onsi/ginkgo/v2"
@@ -22,13 +21,6 @@ var _ = Describe("fly health", func() {
 	)
 
 	BeforeEach(func() {
-		createFlyRc(rc.Targets{
-			targetName: {
-				API:      atcServer.URL(),
-				TeamName: teamName,
-				Token:    &rc.TargetToken{Type: "Bearer", Value: validAccessToken(time.Now().Add(time.Hour))},
-			},
-		})
 		atcServer.Reset()
 
 		flyCmd = exec.Command(flyPath, "-t", targetName, "health")
@@ -83,15 +75,6 @@ var _ = Describe("fly health", func() {
 		})
 
 		Context("when the token is expired or missing", func() {
-			BeforeEach(func() {
-				createFlyRc(rc.Targets{
-					targetName: {
-						API:      atcServer.URL(),
-						TeamName: teamName,
-						Token:    &rc.TargetToken{Type: "Bearer", Value: validAccessToken(time.Now().Add(-time.Hour))},
-					},
-				})
-			})
 
 			It("succeeds without requiring a valid token", func() {
 				sess, err := gexec.Start(flyCmd, GinkgoWriter, GinkgoWriter)
