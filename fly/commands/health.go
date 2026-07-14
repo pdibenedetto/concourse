@@ -50,14 +50,10 @@ func (command *HealthCommand) renderTable(health atc.Health) error {
 		{Contents: health.Timestamp.UTC().Format(time.RFC3339)},
 	})
 
-	dbDetail := ""
-	if health.Database.Error != "" {
-		dbDetail = health.Database.Error
-	}
 	table.Data = append(table.Data, ui.TableRow{
 		{Contents: "database"},
 		statusCell(string(health.Database.Status)),
-		{Contents: dbDetail},
+		{Contents: health.Database.Error},
 	})
 
 	workerDetail := fmt.Sprintf("%d/%d running", health.Workers.Running, health.Workers.Total)
