@@ -189,6 +189,12 @@ func (w Worker) WithActiveTasks(activeTasks int) *Worker {
 	})
 }
 
+func (w Worker) WithMaxActiveTasks(activeTasks int) *Worker {
+	return w.WithWorkerSetup(func(w *atc.Worker) {
+		w.MaxActiveTasks = activeTasks
+	})
+}
+
 func (w Worker) WithTeam(team string) *Worker {
 	return w.WithWorkerSetup(func(w *atc.Worker) {
 		w.Team = team

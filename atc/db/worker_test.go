@@ -441,7 +441,7 @@ var _ = Describe("Worker", func() {
 				It("errors when increasing the active tasks counter", func() {
 					at, err := worker.IncreaseActiveTasks(1)
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("worker has too many active tasks"))
+					Expect(err).To(MatchError(ErrTooManyActiveTasks))
 					Expect(at).To(Equal(0))
 
 					By("it does not increase worker active tasks count")

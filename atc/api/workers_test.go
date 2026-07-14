@@ -842,6 +842,7 @@ var _ = Describe("Workers API", func() {
 				"active_containers": 2,
 				"active_volumes": 10,
 				"active_tasks": 42,
+				"max_active_tasks": 0,
 				"resource_types": null,
 				"platform": "penguin",
 				"ephemeral": true,
