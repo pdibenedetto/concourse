@@ -2,6 +2,7 @@ package gc
 
 import (
 	"context"
+	"time"
 
 	"code.cloudfoundry.org/lager/v3/lagerctx"
 	"github.com/concourse/concourse/atc/db"
@@ -9,11 +10,13 @@ import (
 
 type pipelineCollector struct {
 	pipelineLifecycle db.PipelineLifecycle
+	archivedExpiry    time.Duration
 }
 
-func NewPipelineCollector(pipelineLifecyle db.PipelineLifecycle) *pipelineCollector {
+func NewPipelineCollector(pipelineLifecyle db.PipelineLifecycle, archivedExpiry time.Duration) *pipelineCollector {
 	return &pipelineCollector{
 		pipelineLifecycle: pipelineLifecyle,
+		archivedExpiry:    archivedExpiry,
 	}
 }
 
@@ -26,6 +29,12 @@ func (pc *pipelineCollector) Run(ctx context.Context) error {
 	err := pc.pipelineLifecycle.ArchiveAbandonedPipelines()
 	if err != nil {
 		logger.Error("failed-to-automatically-archive-pipelines", err)
+		return err
+	}
+
+	err = pc.pipelineLifecycle.DestroyArchivedPipelines(pc.archivedExpiry)
+	if err != nil {
+		logger.Error("failed-to-destroy-archived-pipelines", err)
 		return err
 	}
 
