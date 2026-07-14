@@ -44,6 +44,25 @@ func TestResourceCheck(t *testing.T) {
 		require.Equal(t, "some stderr log", stderr.String())
 	})
 
+	t.Run("successful run with no output on stdout", func(t *testing.T) {
+		expectedVersions := []atc.Version{}
+		container := runtimetest.NewContainer().
+			WithProcess(
+				expectedSpec,
+				runtimetest.ProcessStub{
+					SkipOutput: true,
+					Stderr:     "some stderr log",
+				},
+			)
+		stderr := new(bytes.Buffer)
+		versions, processResult, err := resource.Check(ctx, container, stderr)
+		require.NoError(t, err)
+		require.Equal(t, expectedVersions, versions)
+		require.Equal(t, 0, processResult.ExitStatus)
+
+		require.Equal(t, "some stderr log", stderr.String())
+	})
+
 	t.Run("error", func(t *testing.T) {
 		container := runtimetest.NewContainer().
 			WithProcess(
@@ -196,6 +215,20 @@ func TestResourceGet(t *testing.T) {
 			require.Equal(t, 123, processResult.ExitStatus)
 		})
 	})
+
+	t.Run("doesn't emit a version", func(t *testing.T) {
+		container := runtimetest.NewContainer().
+			WithProcess(
+				expectedSpec,
+				runtimetest.ProcessStub{
+					SkipOutput: true,
+					Stderr:     "some stderr log",
+				},
+			)
+		stderr := new(bytes.Buffer)
+		_, _, err := resource.Get(ctx, container, stderr)
+		require.ErrorContains(t, err, "output a null version")
+	})
 }
 
 func TestResourcePut(t *testing.T) {
@@ -292,7 +325,7 @@ func TestResourcePut(t *testing.T) {
 				},
 			)
 		_, _, err := resource.Put(ctx, container, new(bytes.Buffer))
-		require.Error(t, err)
+		require.ErrorContains(t, err, "output a null version")
 	})
 
 	t.Run("error", func(t *testing.T) {

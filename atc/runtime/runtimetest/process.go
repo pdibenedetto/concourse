@@ -16,6 +16,7 @@ type ProcessStub struct {
 	Do         func(context.Context, *Process) error
 	Call       func(context.Context, *Process) (runtime.ProcessResult, error)
 	Output     any
+	SkipOutput bool
 	Stderr     string
 	ExitStatus int
 	Err        string
@@ -51,7 +52,9 @@ func (p *Process) Wait(ctx context.Context) (runtime.ProcessResult, error) {
 	if p.ExitStatus != 0 {
 		return runtime.ProcessResult{ExitStatus: p.ExitStatus}, nil
 	}
-	json.NewEncoder(p.Stdout()).Encode(p.Output)
+	if !p.SkipOutput {
+		json.NewEncoder(p.Stdout()).Encode(p.Output)
+	}
 	return runtime.ProcessResult{ExitStatus: 0}, nil
 }
 
