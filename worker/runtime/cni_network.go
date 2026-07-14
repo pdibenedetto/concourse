@@ -401,7 +401,7 @@ func (n cniNetwork) SetupHostNetwork() error {
 	return nil
 }
 
-func (n cniNetwork) SetupMounts(handle string) ([]specs.Mount, error) {
+func (n cniNetwork) SetupMounts(handle string, hermetic bool) ([]specs.Mount, error) {
 	if handle == "" {
 		return nil, ErrInvalidInput("empty handle")
 	}
@@ -428,7 +428,7 @@ func (n cniNetwork) SetupMounts(handle string) ([]specs.Mount, error) {
 		return nil, fmt.Errorf("creating /etc/hostname: %w", err)
 	}
 
-	resolvContents, err := n.generateResolvConfContents()
+	resolvContents, err := n.generateResolvConfContents(hermetic)
 	if err != nil {
 		return nil, fmt.Errorf("generating resolv.conf: %w", err)
 	}
@@ -485,7 +485,11 @@ func (n cniNetwork) setupRestrictedNetworks() error {
 	return nil
 }
 
-func (n cniNetwork) generateResolvConfContents() ([]byte, error) {
+func (n cniNetwork) generateResolvConfContents(hermetic bool) ([]byte, error) {
+	if hermetic {
+		return []byte{}, nil
+	}
+
 	contents := ""
 	resolvConfEntries := n.nameServers
 	var err error
