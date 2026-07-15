@@ -18,9 +18,9 @@ import (
 type Secrets struct {
 	logger lager.Logger
 
-	client          kubernetes.Interface
-	namespacePrefix string
-	sharedPath      string
+	client                kubernetes.Interface
+	namespacePrefix       string
+	NamespaceSharedSuffix string
 }
 
 // NewSecretLookupPaths defines how variables will be searched in the underlying secret manager
@@ -30,8 +30,8 @@ func (secrets Secrets) NewSecretLookupPaths(teamName string, pipelineName string
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+teamName+"/"+pipelineName+"."))
 	}
 	lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+teamName+"/"))
-	if secrets.sharedPath != "" {
-		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+secrets.sharedPath+"/"))
+	if secrets.NamespaceSharedSuffix != "" {
+		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+secrets.NamespaceSharedSuffix+"/"))
 	}
 	if allowRootPath {
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+"/"))

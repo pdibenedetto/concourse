@@ -10,17 +10,17 @@ import (
 type kubernetesFactory struct {
 	logger lager.Logger
 
-	client          kubernetes.Interface
-	namespacePrefix string
-	sharedPath      string
+	client                kubernetes.Interface
+	namespacePrefix       string
+	namespaceSharedSuffix string
 }
 
-func NewKubernetesFactory(logger lager.Logger, client kubernetes.Interface, namespacePrefix, sharedPath string) *kubernetesFactory {
+func NewKubernetesFactory(logger lager.Logger, client kubernetes.Interface, namespacePrefix, namespaceSharedSuffix string) *kubernetesFactory {
 	factory := &kubernetesFactory{
-		logger:          logger,
-		client:          client,
-		namespacePrefix: namespacePrefix,
-		sharedPath:      sharedPath,
+		logger:                logger,
+		client:                client,
+		namespacePrefix:       namespacePrefix,
+		namespaceSharedSuffix: namespaceSharedSuffix,
 	}
 
 	return factory
@@ -28,9 +28,9 @@ func NewKubernetesFactory(logger lager.Logger, client kubernetes.Interface, name
 
 func (factory *kubernetesFactory) NewSecrets() creds.Secrets {
 	return &Secrets{
-		logger:          factory.logger,
-		client:          factory.client,
-		namespacePrefix: factory.namespacePrefix,
-		sharedPath:      factory.sharedPath,
+		logger:                factory.logger,
+		client:                factory.client,
+		namespacePrefix:       factory.namespacePrefix,
+		NamespaceSharedSuffix: factory.namespaceSharedSuffix,
 	}
 }

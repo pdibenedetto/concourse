@@ -147,7 +147,7 @@ var _ = Describe("Kubernetes", func() {
 		}),
 	)
 
-	Context("with a shared path", func() {
+	Context("with a shared namespace suffix", func() {
 		BeforeEach(func() {
 			fakeClientset = fake.NewSimpleClientset()
 
@@ -164,7 +164,7 @@ var _ = Describe("Kubernetes", func() {
 		DescribeTable("var lookup", func(ex Example) {
 			ex.Assert(vs)
 		},
-			Entry("shared-path scoped vars with a value field", Example{
+			Entry("shared-namespace-suffix scoped vars with a value field", Example{
 				Setup: func() {
 					fakeClientset.CoreV1().Secrets("prefix-shared").Create(context.TODO(), &v1.Secret{
 						ObjectMeta: metav1.ObjectMeta{
@@ -178,41 +178,6 @@ var _ = Describe("Kubernetes", func() {
 
 				Template: "((" + secretName + "))",
 				Result:   "some-shared-value",
-			}),
-		)
-	})
-
-	Context("with a custom shared path suffix", func() {
-		BeforeEach(func() {
-			fakeClientset = fake.NewSimpleClientset()
-
-			factory := kubernetes.NewKubernetesFactory(
-				lagertest.NewTestLogger("test"),
-				fakeClientset,
-				"prefix-",
-				"shared-nested",
-			)
-
-			vs = creds.NewVariables(factory.NewSecrets(), creds.SecretLookupParams{Team: "some-team", Pipeline: "some-pipeline"}, false)
-		})
-
-		DescribeTable("var lookup", func(ex Example) {
-			ex.Assert(vs)
-		},
-			Entry("nested shared-path scoped vars with a value field", Example{
-				Setup: func() {
-					fakeClientset.CoreV1().Secrets("prefix-shared-nested").Create(context.TODO(), &v1.Secret{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: secretName,
-						},
-						Data: map[string][]byte{
-							"value": []byte("some-nested-shared-value"),
-						},
-					}, metav1.CreateOptions{})
-				},
-
-				Template: "((" + secretName + "))",
-				Result:   "some-nested-shared-value",
 			}),
 		)
 	})
