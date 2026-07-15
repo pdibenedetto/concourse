@@ -31,6 +31,6 @@ func (factory *kubernetesFactory) NewSecrets() creds.Secrets {
 		logger:                factory.logger,
 		client:                factory.client,
 		namespacePrefix:       factory.namespacePrefix,
-		NamespaceSharedSuffix: factory.namespaceSharedSuffix,
+		namespaceSharedSuffix: factory.namespaceSharedSuffix,
 	}
 }

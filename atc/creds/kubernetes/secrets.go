@@ -20,7 +20,7 @@ type Secrets struct {
 
 	client                kubernetes.Interface
 	namespacePrefix       string
-	NamespaceSharedSuffix string
+	namespaceSharedSuffix string
 }
 
 // NewSecretLookupPaths defines how variables will be searched in the underlying secret manager
@@ -30,8 +30,8 @@ func (secrets Secrets) NewSecretLookupPaths(teamName string, pipelineName string
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+teamName+"/"+pipelineName+"."))
 	}
 	lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+teamName+"/"))
-	if secrets.NamespaceSharedSuffix != "" {
-		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+secrets.NamespaceSharedSuffix+"/"))
+	if secrets.namespaceSharedSuffix != "" {
+		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+secrets.namespaceSharedSuffix+"/"))
 	}
 	if allowRootPath {
 		lookupPaths = append(lookupPaths, creds.NewSecretLookupWithPrefix(secrets.namespacePrefix+"/"))
