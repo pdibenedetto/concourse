@@ -199,7 +199,7 @@ type RunCommand struct {
 		XFrameOptions             string `long:"x-frame-options" default:"deny" description:"The value to set for the X-Frame-Options header."`
 		ContentSecurityPolicy     string `long:"content-security-policy" default:"frame-ancestors 'none'" description:"The value to set for the Content-Security-Policy header."`
 		StrictTransportSecurity   string `long:"strict-transport-security" description:"The value to set for the Strict-Transport-Security header."`
-		CustomHTTPHeaders         flag.File `long:"custom-http-headers" description:"Path to a YAML or JSON file containing additional HTTP response headers to set on all responses. These headers override any previously set headers."`
+		CustomHTTPHeaders         flag.CustomHTTPHeaders `long:"custom-http-headers" description:"Path to a YAML or JSON file containing additional HTTP response headers to set on all responses. These headers override any previously set headers."`
 		ClusterName               string `long:"cluster-name" description:"A name for this Concourse cluster, to be displayed on the dashboard page."`
 		ClientID                  string `long:"client-id" default:"concourse-web" description:"Client ID to use for login flow"`
 		ClientSecret              string `long:"client-secret" required:"true" description:"Client secret to use for login flow"`
@@ -1483,45 +1483,6 @@ func (cmd *RunCommand) parseCustomRoles() (map[string]string, error) {
 	return mapping, nil
 }
 
-func (cmd *RunCommand) validateCustomHTTPHeaders() error {
-	path := cmd.Server.CustomHTTPHeaders.Path()
-	if path == "" {
-		return nil
-	}
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("failed to open custom HTTP headers file (%s): %w", cmd.Server.CustomHTTPHeaders, err)
-	}
-
-	var data map[string]string
-	if err = yaml.Unmarshal(content, &data); err != nil {
-		return fmt.Errorf("failed to parse custom HTTP headers file (%s): %w", cmd.Server.CustomHTTPHeaders, err)
-	}
-
-	return nil
-}
-
-func (cmd *RunCommand) parseCustomHTTPHeaders() (map[string]string, error) {
-	mapping := map[string]string{}
-
-	path := cmd.Server.CustomHTTPHeaders.Path()
-	if path == "" {
-		return mapping, nil
-	}
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = yaml.Unmarshal(content, &mapping); err != nil {
-		return nil, err
-	}
-
-	return mapping, nil
-}
-
 func workerVersion() (version.Version, error) {
 	return version.NewVersionFromString(concourse.WorkerVersion)
 }
@@ -1781,10 +1742,6 @@ func (cmd *RunCommand) validate() error {
 		errs = multierror.Append(errs, err)
 	}
 
-	if err := cmd.validateCustomHTTPHeaders(); err != nil {
-		errs = multierror.Append(errs, err)
-	}
-
 	return errs.ErrorOrNil()
 }
 
@@ -1948,8 +1905,6 @@ func (cmd *RunCommand) constructHTTPHandler(
 	middleware token.Middleware,
 ) http.Handler {
 
-	customHTTPHeaders, _ := cmd.parseCustomHTTPHeaders()
-
 	csrfHandler := auth.CSRFValidationHandler(
 		apiHandler,
 		middleware,
@@ -1972,7 +1927,7 @@ func (cmd *RunCommand) constructHTTPHandler(
 			XFrameOptions:           cmd.Server.XFrameOptions,
 			ContentSecurityPolicy:   cmd.Server.ContentSecurityPolicy,
 			StrictTransportSecurity: cmd.Server.StrictTransportSecurity,
-			CustomHTTPHeaders:       customHTTPHeaders,
+			CustomHTTPHeaders:       cmd.Server.CustomHTTPHeaders.Headers,
 
 			// proxy Authorization header to/from auth cookie,
 			// to support auth from JS (EventSource) and custom JWT auth
