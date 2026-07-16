@@ -61,6 +61,7 @@ var _ = Describe("Kubernetes", func() {
 			lagertest.NewTestLogger("test"),
 			fakeClientset,
 			"prefix-",
+			"",
 		)
 
 		vs = creds.NewVariables(factory.NewSecrets(), creds.SecretLookupParams{Team: "some-team", Pipeline: "some-pipeline"}, false)
@@ -145,4 +146,39 @@ var _ = Describe("Kubernetes", func() {
 			Result:   "some-field-value",
 		}),
 	)
+
+	Context("with a shared namespace suffix", func() {
+		BeforeEach(func() {
+			fakeClientset = fake.NewSimpleClientset()
+
+			factory := kubernetes.NewKubernetesFactory(
+				lagertest.NewTestLogger("test"),
+				fakeClientset,
+				"prefix-",
+				"shared",
+			)
+
+			vs = creds.NewVariables(factory.NewSecrets(), creds.SecretLookupParams{Team: "some-team", Pipeline: "some-pipeline"}, false)
+		})
+
+		DescribeTable("var lookup", func(ex Example) {
+			ex.Assert(vs)
+		},
+			Entry("shared-namespace-suffix scoped vars with a value field", Example{
+				Setup: func() {
+					fakeClientset.CoreV1().Secrets("prefix-shared").Create(context.TODO(), &v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: secretName,
+						},
+						Data: map[string][]byte{
+							"value": []byte("some-shared-value"),
+						},
+					}, metav1.CreateOptions{})
+				},
+
+				Template: "((" + secretName + "))",
+				Result:   "some-shared-value",
+			}),
+		)
+	})
 })
