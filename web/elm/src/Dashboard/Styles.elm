@@ -1149,6 +1149,7 @@ listViewTeamHeader =
     , style "opacity" "0.9"
     , style "padding-left" "32px"
     , style "width" "100%"
+    , style "box-sizing" "border-box"
     , style "line-height" "25px"
     ]
 
