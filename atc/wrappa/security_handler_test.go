@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/concourse/concourse/atc"
 	"github.com/concourse/concourse/atc/wrappa"
 
 	"github.com/concourse/concourse/atc/wrappa/wrappafakes"

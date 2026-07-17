@@ -1920,6 +1920,11 @@ func (cmd *RunCommand) constructHTTPHandler(
 	webMux.Handle("/.well-known/", apiHandler)
 	webMux.Handle("/", webHandler)
 
+	var additionalHTTPHeaders atc.HTTPHeadersFlag
+	if cmd.Server.AdditionalHTTPHeaders != nil {
+		additionalHTTPHeaders = *cmd.Server.AdditionalHTTPHeaders
+	}
+
 	httpHandler := wrappa.LoggerHandler{
 		Logger: logger,
 
