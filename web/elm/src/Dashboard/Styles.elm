@@ -288,7 +288,9 @@ instanceVar =
 
 inlineInstanceVar : List (Html.Attribute msg)
 inlineInstanceVar =
-    [ style "padding-right" "8px" ]
+    [ style "padding-right" "8px"
+    , style "display" "inline-block"
+    ]
 
 
 noInstanceVars : List (Html.Attribute msg)
