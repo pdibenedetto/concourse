@@ -29,7 +29,7 @@ var _ = Describe("CustomHTTPHeaders", func() {
 	It("returns an error when the file does not exist", func() {
 		err := f.UnmarshalFlag("/nonexistent/headers.yml")
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Failed to open"))
+		Expect(err.Error()).To(ContainSubstring("failed to open"))
 	})
 
 	It("returns an error when the file contains invalid YAML", func() {
@@ -38,7 +38,7 @@ var _ = Describe("CustomHTTPHeaders", func() {
 
 		err := f.UnmarshalFlag(path)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Failed to parse"))
+		Expect(err.Error()).To(ContainSubstring("failed to parse"))
 	})
 
 	It("returns an error when a header name is invalid", func() {
@@ -47,7 +47,7 @@ var _ = Describe("CustomHTTPHeaders", func() {
 
 		err := f.UnmarshalFlag(path)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Invalid header name"))
+		Expect(err.Error()).To(ContainSubstring("invalid header name"))
 	})
 
 	It("parses a valid YAML file correctly", func() {

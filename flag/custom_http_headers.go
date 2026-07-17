@@ -16,12 +16,12 @@ type CustomHTTPHeaders struct {
 func (f *CustomHTTPHeaders) UnmarshalFlag(value string) error {
 	content, err := os.ReadFile(value)
 	if err != nil {
-		return fmt.Errorf("Failed to open custom HTTP headers file (%s): %w", value, err)
+		return fmt.Errorf("failed to open custom HTTP headers file (%s): %w", value, err)
 	}
 
 	var headers map[string]string
 	if err = yaml.Unmarshal(content, &headers); err != nil {
-		return fmt.Errorf("Failed to parse custom HTTP headers file (%s): %w", value, err)
+		return fmt.Errorf("failed to parse custom HTTP headers file (%s): %w", value, err)
 	}
 
 	if headers == nil {
@@ -30,10 +30,10 @@ func (f *CustomHTTPHeaders) UnmarshalFlag(value string) error {
 
 	for name, val := range headers {
 		if !httpguts.ValidHeaderFieldName(name) {
-			return fmt.Errorf("Invalid header name %q in custom HTTP headers file (%s)", name, value)
+			return fmt.Errorf("invalid header name %q in custom HTTP headers file (%s)", name, value)
 		}
 		if !httpguts.ValidHeaderFieldValue(val) {
-			return fmt.Errorf("Invalid header value for %q in custom HTTP headers file (%s)", name, value)
+			return fmt.Errorf("invalid header value for %q in custom HTTP headers file (%s)", name, value)
 		}
 	}
 

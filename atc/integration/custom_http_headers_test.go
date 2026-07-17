@@ -35,7 +35,7 @@ var _ = Describe("Custom HTTP Headers", func() {
 		It("returns an error on startup", func() {
 			err := cmd.Server.CustomHTTPHeaders.UnmarshalFlag("/nonexistent/headers.yml")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("Failed to open"))
+			Expect(err.Error()).To(ContainSubstring("failed to open"))
 		})
 	})
 
@@ -46,7 +46,7 @@ var _ = Describe("Custom HTTP Headers", func() {
 
 			err := cmd.Server.CustomHTTPHeaders.UnmarshalFlag(path)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("Failed to parse"))
+			Expect(err.Error()).To(ContainSubstring("failed to parse"))
 		})
 	})
 
@@ -57,7 +57,7 @@ var _ = Describe("Custom HTTP Headers", func() {
 
 			err := cmd.Server.CustomHTTPHeaders.UnmarshalFlag(path)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("Invalid header name"))
+			Expect(err.Error()).To(ContainSubstring("invalid header name"))
 		})
 	})
 
