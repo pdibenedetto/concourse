@@ -1229,6 +1229,15 @@ dashboardView session model =
         turbulenceView session.turbulenceImgSrc
 
     else
+        let
+            noPipelines =
+                case model.pipelines of
+                    Nothing ->
+                        True
+
+                    Just pipelines ->
+                        pipelines |> Dict.values |> List.all List.isEmpty
+        in
         Html.div
             ([ class (.pageBodyClass Message.Effects.stickyHeaderConfig)
              , id (toHtmlID Dashboard)
@@ -1240,7 +1249,7 @@ dashboardView session model =
                         Styles.groupPageContent model.groupListView
 
                     else
-                        Styles.content model.highDensity
+                        Styles.content (model.highDensity && not noPipelines)
                    )
             )
             (case model.pipelines of
@@ -1419,8 +1428,19 @@ cardsView session params teamCards =
         viewingInstanceGroups =
             Filter.isViewingInstanceGroups params.query
 
+        noPipelines =
+            case params.pipelines of
+                Nothing ->
+                    True
+
+                Just pipelines ->
+                    pipelines |> Dict.values |> List.all List.isEmpty
+
+        highDensity =
+            params.highDensity && not noPipelines
+
         ( headerView, offsetHeight ) =
-            if (params.highDensity && not viewingInstanceGroups) || (params.groupListView && viewingInstanceGroups) then
+            if (highDensity && not viewingInstanceGroups) || (params.groupListView && viewingInstanceGroups) then
                 ( [], 0 )
 
             else
@@ -1524,7 +1544,7 @@ cardsView session params teamCards =
                             session
                             session.hovered
 
-                    else if params.highDensity && not viewingInstanceGroups then
+                    else if highDensity && not viewingInstanceGroups then
                         List.concatMap
                             (Group.hdView
                                 { pipelinesWithResourceErrors = params.pipelinesWithResourceErrors

@@ -540,6 +540,36 @@ all =
                         [ style "display" "initial"
                         , style "padding" "0"
                         ]
+        , test "high density view uses normal density layout when there are no pipelines" <|
+            \_ ->
+                whenOnDashboard { highDensity = True }
+                    |> givenDataAndUser
+                        (apiData [ ( "team", [] ) ])
+                        (userWithRoles [])
+                    |> Tuple.first
+                    |> Application.handleCallback
+                        (Callback.AllPipelinesFetched <| Ok [])
+                    |> Tuple.first
+                    |> Common.queryView
+                    |> Query.find [ id "page-below-top-bar" ]
+                    |> Query.find [ class "dashboard" ]
+                    |> Query.has
+                        [ style "display" "initial"
+                        , style "padding" "0"
+                        ]
+        , test "high density cards view renders normal density header when there are no pipelines" <|
+            \_ ->
+                whenOnDashboard { highDensity = True }
+                    |> givenDataAndUser
+                        (apiData [ ( "team", [] ) ])
+                        (userWithRoles [])
+                    |> Tuple.first
+                    |> Application.handleCallback
+                        (Callback.AllPipelinesFetched <| Ok [])
+                    |> Tuple.first
+                    |> Common.queryView
+                    |> Query.find [ id "page-below-top-bar" ]
+                    |> Query.has [ text "all pipelines" ]
         , test "high density view left-aligns contents" <|
             \_ ->
                 whenOnDashboard { highDensity = True }
