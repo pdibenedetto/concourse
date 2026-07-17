@@ -199,7 +199,7 @@ type RunCommand struct {
 		XFrameOptions             string `long:"x-frame-options" default:"deny" description:"The value to set for the X-Frame-Options header."`
 		ContentSecurityPolicy     string `long:"content-security-policy" default:"frame-ancestors 'none'" description:"The value to set for the Content-Security-Policy header."`
 		StrictTransportSecurity   string `long:"strict-transport-security" description:"The value to set for the Strict-Transport-Security header."`
-		AdditionalHTTPHeaders     *atc.HTTPHeadersFlag `long:"additional-http-headers" description:"Additional HTTP response headers to set on all responses as a JSON object." value-name:"JSON"`
+		CustomHTTPHeaders         flag.CustomHTTPHeaders `long:"custom-http-headers" description:"Path to a YAML or JSON file containing additional HTTP response headers to set on all responses. These headers override any previously set headers."`
 		ClusterName               string `long:"cluster-name" description:"A name for this Concourse cluster, to be displayed on the dashboard page."`
 		ClientID                  string `long:"client-id" default:"concourse-web" description:"Client ID to use for login flow"`
 		ClientSecret              string `long:"client-secret" required:"true" description:"Client secret to use for login flow"`
@@ -1920,19 +1920,14 @@ func (cmd *RunCommand) constructHTTPHandler(
 	webMux.Handle("/.well-known/", apiHandler)
 	webMux.Handle("/", webHandler)
 
-	var additionalHTTPHeaders atc.HTTPHeadersFlag
-	if cmd.Server.AdditionalHTTPHeaders != nil {
-		additionalHTTPHeaders = *cmd.Server.AdditionalHTTPHeaders
-	}
-
 	httpHandler := wrappa.LoggerHandler{
 		Logger: logger,
 
 		Handler: wrappa.SecurityHandler{
-			XFrameOptions:             cmd.Server.XFrameOptions,
-			ContentSecurityPolicy:     cmd.Server.ContentSecurityPolicy,
-			StrictTransportSecurity:   cmd.Server.StrictTransportSecurity,
-			AdditionalHTTPHeaders:     additionalHTTPHeaders,
+			XFrameOptions:           cmd.Server.XFrameOptions,
+			ContentSecurityPolicy:   cmd.Server.ContentSecurityPolicy,
+			StrictTransportSecurity: cmd.Server.StrictTransportSecurity,
+			CustomHTTPHeaders:       cmd.Server.CustomHTTPHeaders.Headers,
 
 			// proxy Authorization header to/from auth cookie,
 			// to support auth from JS (EventSource) and custom JWT auth
