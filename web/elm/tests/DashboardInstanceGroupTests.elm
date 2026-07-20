@@ -370,6 +370,53 @@ all =
                                     Msgs.PipelineCardInstanceVar Msgs.AllPipelinesSection 1 "a" "foo"
                             ]
             ]
+        , describe "list view" <|
+            [ test "list view toggle is shown" <|
+                \_ ->
+                    whenOnDashboardViewingInstanceGroup { dashboardView = ViewNonArchivedPipelines }
+                        |> gotPipelines [ pipelineInstance BuildStatusSucceeded False 1 ]
+                        |> Common.queryView
+                        |> Query.find [ id "legend" ]
+                        |> Query.has [ text "list view" ]
+            , test "list view toggle is off by default" <|
+                \_ ->
+                    whenOnDashboardViewingInstanceGroup { dashboardView = ViewNonArchivedPipelines }
+                        |> gotPipelines [ pipelineInstance BuildStatusSucceeded False 1 ]
+                        |> Common.queryView
+                        |> Query.find [ id "legend" ]
+                        |> Query.find [ attribute <| Attr.attribute "aria-label" "Toggle group list view" ]
+                        |> Query.children []
+                        |> Query.index 0
+                        |> Query.has
+                            [ style "background-image" <|
+                                Assets.backgroundImage <|
+                                    Just (Assets.ToggleSwitch False)
+                            ]
+            , test "list view renders when flag is set" <|
+                \_ ->
+                    whenOnDashboardViewingInstanceGroup { dashboardView = ViewNonArchivedPipelines }
+                        |> gotPipelines [ pipelineInstance BuildStatusSucceeded False 1 ]
+                        |> Application.handleDelivery (GroupListViewReceived (Ok True))
+                        |> Tuple.first
+                        |> Common.queryView
+                        |> Query.has [ style "margin-bottom" "32px" ]
+            , test "list view toggle is on when flag is set" <|
+                \_ ->
+                    whenOnDashboardViewingInstanceGroup { dashboardView = ViewNonArchivedPipelines }
+                        |> gotPipelines [ pipelineInstance BuildStatusSucceeded False 1 ]
+                        |> Application.handleDelivery (GroupListViewReceived (Ok True))
+                        |> Tuple.first
+                        |> Common.queryView
+                        |> Query.find [ id "legend" ]
+                        |> Query.find [ attribute <| Attr.attribute "aria-label" "Toggle group list view" ]
+                        |> Query.children []
+                        |> Query.index 0
+                        |> Query.has
+                            [ style "background-image" <|
+                                Assets.backgroundImage <|
+                                    Just (Assets.ToggleSwitch True)
+                            ]
+            ]
         ]
 
 

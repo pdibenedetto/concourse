@@ -63,8 +63,7 @@ type Route
 
 
 type SearchType
-    = HighDensity
-    | Normal String
+    = Normal String
 
 
 type DashboardView
@@ -277,7 +276,6 @@ dashboard =
                 <?> (stringWithSpaces "search" |> Query.map (Maybe.withDefault ""))
               )
                 |> map Normal
-            , s "hd" |> map HighDensity
             ]
             <?> dashboardViewQuery
 
@@ -523,14 +521,6 @@ toString route =
 
         Dashboard { searchType, dashboardView } ->
             ( [], [] )
-                |> appendPath
-                    (case searchType of
-                        Normal _ ->
-                            []
-
-                        HighDensity ->
-                            [ "hd" ]
-                    )
                 |> appendQuery
                     (case searchType of
                         Normal "" ->
@@ -538,9 +528,6 @@ toString route =
 
                         Normal query ->
                             searchQueryParams query
-
-                        _ ->
-                            []
                     )
                 |> appendQuery
                     (case dashboardView of
@@ -644,9 +631,6 @@ extractQuery route =
     case route of
         Normal q ->
             q
-
-        _ ->
-            ""
 
 
 searchQueryParams : String -> List Builder.QueryParameter

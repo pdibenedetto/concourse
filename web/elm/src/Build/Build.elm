@@ -299,10 +299,10 @@ handleCallback action ( model, effects ) =
                     ( model, effects )
 
         BuildJobDetailsFetched (Ok job) ->
-                        ( { model
-                                | disableManualTrigger = job.disableManualTrigger
-                                , disableReruns = job.disableReruns
-                            }
+            ( { model
+                | disableManualTrigger = job.disableManualTrigger
+                , disableReruns = job.disableReruns
+              }
             , effects
             )
 

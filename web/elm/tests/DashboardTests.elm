@@ -540,6 +540,36 @@ all =
                         [ style "display" "initial"
                         , style "padding" "0"
                         ]
+        , test "high density view uses normal density layout when there are no pipelines" <|
+            \_ ->
+                whenOnDashboard { highDensity = True }
+                    |> givenDataAndUser
+                        (apiData [ ( "team", [] ) ])
+                        (userWithRoles [])
+                    |> Tuple.first
+                    |> Application.handleCallback
+                        (Callback.AllPipelinesFetched <| Ok [])
+                    |> Tuple.first
+                    |> Common.queryView
+                    |> Query.find [ id "page-below-top-bar" ]
+                    |> Query.find [ class "dashboard" ]
+                    |> Query.has
+                        [ style "display" "initial"
+                        , style "padding" "0"
+                        ]
+        , test "high density cards view renders normal density header when there are no pipelines" <|
+            \_ ->
+                whenOnDashboard { highDensity = True }
+                    |> givenDataAndUser
+                        (apiData [ ( "team", [] ) ])
+                        (userWithRoles [])
+                    |> Tuple.first
+                    |> Application.handleCallback
+                        (Callback.AllPipelinesFetched <| Ok [])
+                    |> Tuple.first
+                    |> Common.queryView
+                    |> Query.find [ id "page-below-top-bar" ]
+                    |> Query.has [ text "all pipelines" ]
         , test "high density view left-aligns contents" <|
             \_ ->
                 whenOnDashboard { highDensity = True }
@@ -1436,10 +1466,22 @@ all =
                         \_ ->
                             hdToggle
                                 |> Query.has [ style "flex-direction" "row" ]
-                    , test "links to HD view" <|
+                    , test "is a clickable button" <|
                         \_ ->
                             hdToggle
-                                |> Query.has [ attribute <| Attr.href "/hd" ]
+                                |> Query.has [ style "cursor" "pointer" ]
+                    , test "is a native button element so it is keyboard accessible" <|
+                        \_ ->
+                            hdToggle
+                                |> Query.has
+                                    [ tag "button"
+                                    , attribute <| Attr.type_ "button"
+                                    ]
+                    , test "toggles high-density when activated" <|
+                        \_ ->
+                            hdToggle
+                                |> Event.simulate Event.click
+                                |> Event.expect (ApplicationMsgs.Update Msgs.ToggleHighDensity)
                     , test "displays the off state" <|
                         \_ ->
                             hdToggle
@@ -1485,7 +1527,7 @@ all =
                                     , style "height" "20px"
                                     , style "width" "35px"
                                     ]
-                    , test "links to normal dashboard view" <|
+                    , test "is a clickable button" <|
                         \_ ->
                             whenOnDashboard { highDensity = True }
                                 |> givenDataUnauthenticated
@@ -1499,7 +1541,7 @@ all =
                                 |> Tuple.first
                                 |> Common.queryView
                                 |> findHDToggle
-                                |> Query.has [ attribute <| Attr.href "/" ]
+                                |> Query.has [ style "cursor" "pointer" ]
                     , test "will not shrink on resizing" <|
                         \_ ->
                             whenOnDashboard { highDensity = True }
@@ -1888,13 +1930,15 @@ all =
                         (Callback.LoggedOut <| Ok ())
                     |> Tuple.second
                     |> Common.contains (Effects.NavigateTo "/")
-        , test "navigate to hd view on logged out when in hd view" <|
+        , test "navigate to root on logged out when in hd view" <|
             \_ ->
-                Common.init "/hd"
+                Common.init "/"
+                    |> Application.handleDelivery (HighDensityReceived (Ok True))
+                    |> Tuple.first
                     |> Application.handleCallback
                         (Callback.LoggedOut <| Ok ())
                     |> Tuple.second
-                    |> Common.contains (Effects.NavigateTo "/hd")
+                    |> Common.contains (Effects.NavigateTo "/")
         , test "fetch all teams on logged out" <|
             \_ ->
                 Common.init "/"
@@ -1951,13 +1995,13 @@ iconSelector { size, image } =
 
 whenOnDashboard : { highDensity : Bool } -> Application.Model
 whenOnDashboard { highDensity } =
-    Common.init
-        (if highDensity then
-            "/hd"
+    Common.init "/"
+        |> (if highDensity then
+                Application.handleDelivery (HighDensityReceived (Ok True)) >> Tuple.first
 
-         else
-            "/"
-        )
+            else
+                identity
+           )
         |> Common.withAllPipelinesVisible
 
 
@@ -1967,12 +2011,7 @@ whenOnDashboardViewingAllPipelines { highDensity } =
         |> Application.handleDelivery
             (RouteChanged <|
                 Routes.Dashboard
-                    { searchType =
-                        if highDensity then
-                            Routes.HighDensity
-
-                        else
-                            Routes.Normal ""
+                    { searchType = Routes.Normal ""
                     , dashboardView = Routes.ViewAllPipelines
                     }
             )
@@ -2133,7 +2172,7 @@ circularJobs =
       , pausedBy = Nothing
       , pausedAt = Nothing
       , disableManualTrigger = False
-    , disableReruns = False
+      , disableReruns = False
       , inputs =
             [ { name = "inA"
               , resource = "res0"
@@ -2184,7 +2223,7 @@ circularJobs =
       , pausedBy = Nothing
       , pausedAt = Nothing
       , disableManualTrigger = False
-    , disableReruns = False
+      , disableReruns = False
       , inputs =
             [ { name = "inB"
               , resource = "res0"

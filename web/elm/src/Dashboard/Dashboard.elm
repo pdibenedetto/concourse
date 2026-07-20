@@ -109,7 +109,8 @@ init f =
       , hideFooter = False
       , hideFooterCounter = 0
       , showHelp = False
-      , highDensity = f.searchType == Routes.HighDensity
+      , highDensity = False -- will be loaded from localStorage
+      , groupListView = False -- will be loaded from localStorage
       , query = Routes.extractQuery f.searchType
       , dashboardView = f.dashboardView
       , pipelinesWithResourceErrors = Set.empty
@@ -141,6 +142,8 @@ init f =
       , FetchAllResources
       , FetchAllJobs
       , FetchAllPipelines
+      , LoadHighDensity
+      , LoadGroupListView
       , LoadCachedJobs
       , LoadCachedPipelines
       , LoadCachedTeams
@@ -162,8 +165,7 @@ changeRoute f ( model, effects ) =
             Filter.isViewingInstanceGroups newQuery
     in
     ( { model
-        | highDensity = f.searchType == Routes.HighDensity
-        , dashboardView = f.dashboardView
+        | dashboardView = f.dashboardView
         , query = newQuery
       }
     , effects
@@ -417,12 +419,7 @@ handleCallback callback ( model, effects ) =
                 ++ [ NavigateTo <|
                         Routes.toString <|
                             Routes.Dashboard
-                                { searchType =
-                                    if model.highDensity then
-                                        Routes.HighDensity
-
-                                    else
-                                        Routes.Normal ""
+                                { searchType = Routes.Normal ""
                                 , dashboardView = model.dashboardView
                                 }
                    , FetchAllTeams
@@ -528,6 +525,18 @@ handleDeliveryBody delivery ( model, effects ) =
 
         SideBarStateReceived _ ->
             ( model, effects ++ [ GetViewportOf Dashboard ] )
+
+        HighDensityReceived (Ok highDensity) ->
+            ( { model | highDensity = highDensity }, effects )
+
+        HighDensityReceived (Err _) ->
+            ( model, effects )
+
+        GroupListViewReceived (Ok groupListView) ->
+            ( { model | groupListView = groupListView }, effects )
+
+        GroupListViewReceived (Err _) ->
+            ( model, effects )
 
         CachedPipelinesReceived (Ok pipelines) ->
             if model.pipelines == Nothing then
@@ -689,6 +698,24 @@ updateBody session msg ( model, effects ) =
 
         DragOver target ->
             ( { model | dropState = Models.Dropping target }, effects )
+
+        ToggleHighDensity ->
+            let
+                newHighDensity =
+                    not model.highDensity
+            in
+            ( { model | highDensity = newHighDensity }
+            , effects ++ [ SaveHighDensity newHighDensity ]
+            )
+
+        ToggleGroupListView ->
+            let
+                newGroupListView =
+                    not model.groupListView
+            in
+            ( { model | groupListView = newGroupListView }
+            , effects ++ [ SaveGroupListView newGroupListView ]
+            )
 
         DragEnd ->
             case ( model.dragState, model.dropState ) of
@@ -1163,20 +1190,17 @@ showArchivedToggleView model =
         Toggle.toggleSwitch
             { ariaLabel = "Toggle whether archived pipelines are displayed"
             , hrefRoute =
-                Routes.Dashboard
-                    { searchType =
-                        if model.highDensity then
-                            Routes.HighDensity
+                Just <|
+                    Routes.Dashboard
+                        { searchType = Routes.Normal model.query
+                        , dashboardView =
+                            if on then
+                                Routes.ViewNonArchivedPipelines
 
-                        else
-                            Routes.Normal model.query
-                    , dashboardView =
-                        if on then
-                            Routes.ViewNonArchivedPipelines
-
-                        else
-                            Routes.ViewAllPipelines
-                    }
+                            else
+                                Routes.ViewAllPipelines
+                        }
+            , onToggle = NoOp
             , text = "show archived"
             , textDirection = Toggle.Left
             , on = on
@@ -1205,13 +1229,28 @@ dashboardView session model =
         turbulenceView session.turbulenceImgSrc
 
     else
+        let
+            noPipelines =
+                case model.pipelines of
+                    Nothing ->
+                        True
+
+                    Just pipelines ->
+                        pipelines |> Dict.values |> List.all List.isEmpty
+        in
         Html.div
-            (class (.pageBodyClass Message.Effects.stickyHeaderConfig)
-                :: id (toHtmlID Dashboard)
-                :: onScroll Scrolled
-                :: onMouseEnter (Hover <| Just Dashboard)
-                :: onMouseLeave (Hover Nothing)
-                :: Styles.content model.highDensity
+            ([ class (.pageBodyClass Message.Effects.stickyHeaderConfig)
+             , id (toHtmlID Dashboard)
+             , onScroll Scrolled
+             , onMouseEnter (Hover <| Just Dashboard)
+             , onMouseLeave (Hover Nothing)
+             ]
+                ++ (if Filter.isViewingInstanceGroups model.query then
+                        Styles.groupPageContent model.groupListView
+
+                    else
+                        Styles.content (model.highDensity && not noPipelines)
+                   )
             )
             (case model.pipelines of
                 Nothing ->
@@ -1320,7 +1359,11 @@ turbulenceView path =
 
 dashboardCardsView : Session -> Model -> List (Html Message)
 dashboardCardsView session model =
-    if Filter.isViewingInstanceGroups model.query then
+    let
+        isViewingInstanceGroups =
+            Filter.isViewingInstanceGroups model.query
+    in
+    if isViewingInstanceGroups then
         instanceGroupCardsView session model
 
     else
@@ -1385,8 +1428,19 @@ cardsView session params teamCards =
         viewingInstanceGroups =
             Filter.isViewingInstanceGroups params.query
 
+        noPipelines =
+            case params.pipelines of
+                Nothing ->
+                    True
+
+                Just pipelines ->
+                    pipelines |> Dict.values |> List.all List.isEmpty
+
+        highDensity =
+            params.highDensity && not noPipelines
+
         ( headerView, offsetHeight ) =
-            if params.highDensity then
+            if (highDensity && not viewingInstanceGroups) || (params.groupListView && viewingInstanceGroups) then
                 ( [], 0 )
 
             else
@@ -1476,7 +1530,21 @@ cardsView session params teamCards =
 
         groupViews =
             teamCards
-                |> (if params.highDensity then
+                |> (if params.groupListView && viewingInstanceGroups then
+                        Group.listView
+                            { pipelinesWithResourceErrors = params.pipelinesWithResourceErrors
+                            , pipelineJobs = params.pipelineJobs
+                            , jobs = jobs
+                            , dashboardView = params.dashboardView
+                            , query = params.query
+                            , now = params.now
+                            , dragState = params.dragState
+                            , dropState = params.dropState
+                            }
+                            session
+                            session.hovered
+
+                    else if highDensity && not viewingInstanceGroups then
                         List.concatMap
                             (Group.hdView
                                 { pipelinesWithResourceErrors = params.pipelinesWithResourceErrors
@@ -1484,6 +1552,8 @@ cardsView session params teamCards =
                                 , jobs = jobs
                                 , dashboardView = params.dashboardView
                                 , query = params.query
+                                , dragState = params.dragState
+                                , dropState = params.dropState
                                 }
                                 session
                             )
