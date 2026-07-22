@@ -133,13 +133,19 @@ func (s *scanner) check(ctx context.Context, checkable db.Checkable, resourceTyp
 	})
 	defer span.End()
 
-	version := checkable.CurrentPinnedVersion()
-
 	if checkable.CheckEvery() != nil && checkable.CheckEvery().Never {
 		return
 	}
 
-	_, created, err := s.checkFactory.TryCreateCheck(lagerctx.NewContext(spanCtx, logger), checkable, resourceTypes, version, false, false, false)
+	_, created, err := s.checkFactory.TryCreateCheck(
+		lagerctx.NewContext(spanCtx, logger),
+		checkable,
+		resourceTypes,
+		checkable.CurrentPinnedVersion(),
+		false, // not manually triggered
+		false, // don't skip interval
+		false, // in-memory check
+	)
 	if err != nil {
 		logger.Error("failed-to-create-check", err)
 		return
