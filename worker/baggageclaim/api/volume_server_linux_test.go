@@ -139,7 +139,8 @@ var _ = Describe("Volume Server", func() {
 				})
 
 				It("namespaces volume path", func() {
-					request, _ := http.NewRequest("PUT", fmt.Sprintf("/volumes/%s/stream-in?path=%s", myVolume.Handle, "dest-path"), tgzBuffer)
+					request, err := http.NewRequest("PUT", fmt.Sprintf("/volumes/%s/stream-in?path=%s", myVolume.Handle, "dest-path"), tgzBuffer)
+					Expect(err).NotTo(HaveOccurred())
 					request.Header.Set("Content-Encoding", "gzip")
 					recorder := httptest.NewRecorder()
 					handler.ServeHTTP(recorder, request)
@@ -166,7 +167,8 @@ var _ = Describe("Volume Server", func() {
 				})
 
 				It("namespaces volume path", func() {
-					request, _ := http.NewRequest("PUT", fmt.Sprintf("/volumes/%s/stream-in?path=%s", myVolume.Handle, "dest-path"), tgzBuffer)
+					request, err := http.NewRequest("PUT", fmt.Sprintf("/volumes/%s/stream-in?path=%s", myVolume.Handle, "dest-path"), tgzBuffer)
+					Expect(err).NotTo(HaveOccurred())
 					request.Header.Set("Content-Encoding", "gzip")
 					recorder := httptest.NewRecorder()
 					handler.ServeHTTP(recorder, request)
