@@ -54,9 +54,9 @@ func (s *Server) CheckResource(dbPipeline db.Pipeline) http.Handler {
 			dbResource,
 			dbResourceTypes,
 			reqBody.From,
-			true,
-			!reqBody.Shallow,
-			true,
+			true,             // manually triggered
+			!reqBody.Shallow, // skip interval recursively
+			true,             // to database
 		)
 		if err != nil {
 			logger.Error("failed-to-create-check", err)

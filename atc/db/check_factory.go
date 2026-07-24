@@ -199,6 +199,17 @@ func (c *checkFactory) Resources() ([]Resource, error) {
 				          WHERE rcv.resource_config_scope_id = r.resource_config_scope_id
 				        )`),
 			},
+			sq.And{
+				// find non-triggering, pinned resources whose pinned version
+				// has not yet been discovered by a check
+				sq.Eq{"ji.trigger": false},
+				sq.NotEq{"rp.version": nil},
+				sq.Expr(`NOT EXISTS (SELECT 1
+				          FROM resource_config_versions rcv
+				          WHERE rcv.resource_config_scope_id = r.resource_config_scope_id
+				          AND rcv.version @> rp.version
+				        )`),
+			},
 		}).
 		OrderBy("r.id ASC").
 		RunWith(c.conn).

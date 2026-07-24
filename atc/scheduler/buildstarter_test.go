@@ -1116,7 +1116,7 @@ var _ = Describe("BuildStarter", func() {
 						Expect(version).To(BeNil())
 						Expect(skipInterval).To(BeFalse())
 						Expect(skipIntervalRecurv).To(BeFalse())
-						Expect(toDb).To(BeFalse())
+						Expect(toDb).To(BeTrue())
 					})
 
 					Context("build is manually created", func() {
